@@ -1,0 +1,15 @@
+__pycache__/
+
+*.pyc
+
+.DS_Store         # dla systemów macOS
+Thumbs.db         # dla systemów Windows
+
+
+.idea/            # dla PyCharm i innych IDE
+.vscode/          # dla Visual Studio Code
+*.sublime-workspace
+*.sublime-project
+
+*.log
+

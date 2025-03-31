@@ -9,7 +9,47 @@ import os
 
 class Augumentor:
     def __init__(self):
-        self.aug_dictionary = {}
+        self.aug_dictionary = {
+            1: {  # flips and mirrors
+                1: lambda p: A.HorizontalFlip(p=p), 
+                2: lambda p: A.VerticalFlip(p=p),  
+                3: lambda p: A.Compose([A.HorizontalFlip(p=p), A.VerticalFlip(p=p)])
+            },
+            2: {  # rotations
+                1: lambda p: A.Rotate(limit=(5,5), p=p), 
+                2: lambda p: A.Rotate(limit=(10,10), p=p), 
+                3: lambda p: A.Rotate(limit=(15,15), p=p),  
+                4: lambda p: A.Rotate(limit=(20,20), p=p)  
+            },
+            3: {  # blurs
+                1: lambda p: A.GaussianBlur(blur_limit=(5, 5), p=p), 
+                2: lambda p: A.GaussianBlur(blur_limit=(8, 8), p=p), 
+                3: lambda p: A.GaussianBlur(blur_limit=(11, 11), p=p),
+                4: lambda p: A.GaussianBlur(blur_limit=(14, 14), p=p)
+            },
+            4: {  # brightness and contrast
+                1: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=p), 
+                2: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.2, 0.2), contrast_limit=(0.2, 0.2), p=p),  
+                3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.3, 0.3), contrast_limit=(0.3, 0.3), p=p), 
+                4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.4, 0.4), contrast_limit=(0.4, 0.4), p=p) 
+            },
+            5: {  # noises
+                1: lambda p: A.GaussNoise(std_range=(0.1,0.1), p=p),
+                2: lambda p: A.GaussNoise(std_range=(0.2,0.2), p=p),  
+                3: lambda p: A.GaussNoise(std_range=(0.3,0.3), p=p),  
+                4: lambda p: A.GaussNoise(std_range=(0.4,0.4), p=p) 
+            },
+            6: {  # color adjustments
+                1: lambda p: A.HueSaturationValue(hue_shift_limit=(10,10), sat_shift_limit=(10, 10), val_shift_limit=(10, 10), p=p),  
+                2: lambda p: A.HueSaturationValue(hue_shift_limit=(20, 20), sat_shift_limit=(20, 20), val_shift_limit=(20, 20), p=p), 
+                3: lambda p: A.HueSaturationValue(hue_shift_limit=(30, 30), sat_shift_limit=(30, 30), val_shift_limit=(30, 30), p=p), 
+            },
+            7: {  # negative & black and white
+                1: lambda p: A.InvertImg(p=p),
+                2: lambda p: A.ToGray(p=p),
+            },
+        }
+
 
    
     
@@ -21,7 +61,7 @@ class Augumentor:
         if image is None:
             raise ValueError(f"Error: Failed to load image from {path}. It may be corrupted or unsupported.")
 
-        print(f"Loaded image shape: {image.shape}, dtype: {image.dtype}")
+        # print(f"Loaded image shape: {image.shape}, dtype: {image.dtype}")
 
         # Handle PNG with an alpha channel (convert to RGB)
         if image.shape[-1] == 4:
@@ -76,33 +116,17 @@ class Augumentor:
                 #print(f"Extracted segment shape: {segment.shape} at ({x1}, {y1}, {x2}, {y2})")
                 yield x1, y1, x2, y2, segment
 
-
                 
     def augment_image(self, image, x_splits_number, y_splits_number, min_space_between_splits):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         augmented_image = np.copy(image)
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
         for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
-            augumented_segment = self.rotate(segment, 12)
-            augmented_image[y1:y2, x1:x2] = augumented_segment
+            aug_type = random.randint(1, len(self.aug_dictionary))
+            aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
+            augmented_segment = self.aug_dictionary[aug_type][aug_power](p=1.0)(image=segment)['image']
+            augmented_image[y1:y2, x1:x2] = augmented_segment
         return augmented_image
-    
-    def vertical_flip(self, image):
-        if image.size == 0:
-            raise ValueError("Received an empty image for flipping!")
-
-        transform = A.VerticalFlip(p=1)
-        transformed = transform(image=image)
-
-        if transformed['image'].shape != image.shape:
-            print(f"Shape mismatch: original {image.shape}, flipped {transformed['image'].shape}")
-
-        return transformed['image']
-    
-    def rotate(self, image, angle):
-        transform = A.Rotate((angle, angle), p=0.7)
-        transformed = transform(image=image)
-        return transformed['image']
 
     
     def save_image(self, image, path):
@@ -111,11 +135,25 @@ class Augumentor:
     def process_image(self, path, output_path, x_splits_number, y_splits_number, min_space_between_splits):
         image = self.load_image(path)
 
-        # Display image using Matplotlib
-        plt.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        plt.axis('off')  # Hide axis
-        plt.show()
-
         augmented_image = self.augment_image(image, x_splits_number, y_splits_number, min_space_between_splits)
         self.save_image(augmented_image, output_path)
-        #return augmented_image
+
+        self.display_images(image, augmented_image)
+        return
+
+    def display_images(self, original_image, augmented_image):
+        """Display original and augmented images side by side."""
+        plt.figure(figsize=(10, 5)) 
+
+        plt.subplot(1, 2, 1) 
+        plt.imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
+        plt.title("Original Image")
+        plt.axis('off') 
+
+        plt.subplot(1, 2, 2)  
+        plt.imshow(cv2.cvtColor(augmented_image, cv2.COLOR_BGR2RGB))
+        plt.title("Augmented Image")
+        plt.axis('off')  
+
+        plt.show()
+
