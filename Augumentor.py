@@ -8,7 +8,11 @@ import os
 
 
 class Augumentor:
-    def __init__(self):
+    def __init__(self, seed=123):
+        self.seed = seed
+        np.random.seed(seed)
+        random.seed(seed)  
+    
         self.aug_dictionary = {
             1: {  # flips and mirrors
                 1: lambda p: A.HorizontalFlip(p=p), 
@@ -117,28 +121,54 @@ class Augumentor:
                 yield x1, y1, x2, y2, segment
 
                 
-    def augment_image(self, image, x_splits_number, y_splits_number, min_space_between_splits):
+    def augment_image(self, image, x_splits_number, y_splits_number, min_space_between_splits, mode):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         augmented_image = np.copy(image)
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
-        for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+        
+        if mode not in ['same', 'different', 'combine']:
+            raise ValueError("Invalid mode. Choose 'same', 'different', or 'combine'.")
+        
+        if mode == 'same':
             aug_type = random.randint(1, len(self.aug_dictionary))
-            aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
-            augmented_segment = self.aug_dictionary[aug_type][aug_power](p=1.0)(image=segment)['image']
-            augmented_image[y1:y2, x1:x2] = augmented_segment
+            for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
+                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=1.0)(image=segment)['image']
+                augmented_image[y1:y2, x1:x2] = augmented_segment
+
+        if mode == 'different':
+            for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                aug_type = random.randint(1, len(self.aug_dictionary))
+                aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
+                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=1.0)(image=segment)['image']
+                augmented_image[y1:y2, x1:x2] = augmented_segment
+
+        if mode == 'combine':
+            for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                r = random.randint(1, 3)
+                chosen_augmentations = random.sample(list(self.aug_dictionary.keys()), r)
+                augmented_segment = segment.copy() 
+                for aug_type in chosen_augmentations:
+                    aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
+                    augment = self.aug_dictionary[aug_type][aug_power]
+                    augmented_segment = augment(p=1.0)(image=augmented_segment)['image']
+                augmented_image[y1:y2, x1:x2] = augmented_segment
+
         return augmented_image
 
     
     def save_image(self, image, path):
         cv2.imwrite(path, image)
     
-    def process_image(self, path, output_path, x_splits_number, y_splits_number, min_space_between_splits):
+    def process_image(self, path, output_path, x_splits_number, y_splits_number, min_space_between_splits,  mode='different'):
         image = self.load_image(path)
 
-        augmented_image = self.augment_image(image, x_splits_number, y_splits_number, min_space_between_splits)
+        augmented_image = self.augment_image(image, x_splits_number, y_splits_number, min_space_between_splits, mode)
         self.save_image(augmented_image, output_path)
 
         self.display_images(image, augmented_image)
+
+        # return augmented_image
         return
 
     def display_images(self, original_image, augmented_image):
