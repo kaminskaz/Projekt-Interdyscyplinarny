@@ -11,7 +11,7 @@ class Augumentor:
     def __init__(self, seed=123):
         self.seed = seed
         np.random.seed(seed)
-        random.seed(seed)  
+        random.seed(seed)
     
         self.aug_dictionary = {
             1: {  # flips and mirrors
@@ -124,8 +124,9 @@ class Augumentor:
     def augment_image(self, image, x_splits_number, y_splits_number, min_space_between_splits, mode):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         augmented_image = np.copy(image)
+
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
-        
+
         if mode not in ['same', 'different', 'combine']:
             raise ValueError("Invalid mode. Choose 'same', 'different', or 'combine'.")
         
@@ -160,16 +161,22 @@ class Augumentor:
     def save_image(self, image, path):
         cv2.imwrite(path, image)
     
-    def process_image(self, path, output_path, x_splits_number, y_splits_number, min_space_between_splits,  mode='different'):
-        image = self.load_image(path)
+    def process_image(self, path = None, output_path = None, x_splits_number=0, y_splits_number=0, min_space_between_splits=0,  mode='different', image = None):
+        
+        if self.path is not None:
+            image = self.load_image(path)
+        else:
+            image = self.image
 
         augmented_image = self.augment_image(image, x_splits_number, y_splits_number, min_space_between_splits, mode)
-        self.save_image(augmented_image, output_path)
-
+        
         self.display_images(image, augmented_image)
 
-        # return augmented_image
-        return
+        if output_path is not None:
+            self.save_image(augmented_image, output_path)
+            return
+        else:
+            return augmented_image
 
     def display_images(self, original_image, augmented_image):
         """Display original and augmented images side by side."""
