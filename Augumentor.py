@@ -165,8 +165,6 @@ class Augumentor:
         
         if self.path is not None:
             image = self.load_image(path)
-        else:
-            image = self.image
 
         augmented_image = self.augment_image(image, x_splits_number, y_splits_number, min_space_between_splits, mode)
         

@@ -107,8 +107,9 @@ class STESAugmentor:
     def save_image(self, image, path):
         cv2.imwrite(path, image)
 
-    def process_image(self, input_path, output_path, alpha=0.1, beta=0.3):
-        image = self.load_image(input_path)
+    def process_image(self, input_path, output_path, alpha=0.1, beta=0.3, image=None):
+        if input_path:
+            image = self.load_image(input_path)
         augmented_image = self.augment_image(image, alpha, beta)
         self.save_image(augmented_image, output_path)
         self.display_images(image, augmented_image)
