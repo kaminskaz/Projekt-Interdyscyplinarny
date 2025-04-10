@@ -52,6 +52,9 @@ class STESAugmentor:
         return transformed_segment
 
     def augment_image(self, image, alpha=0.1, beta=0.3):
+        if image.shape[-1] == 4:
+            print("Alpha channel detected, converting from BGRA to BGR")
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)  
         augmented_image = np.copy(image)
         Gh, Gw, dh, dw = self.grid_partition(image.shape[0], image.shape[1], alpha, beta)
         chosen_segment_index = random.randint(0, 3)
