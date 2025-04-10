@@ -121,7 +121,7 @@ class Augumentor:
                 yield x1, y1, x2, y2, segment
 
                 
-    def augment_image(self, image, x_splits_number, y_splits_number, min_space_between_splits, mode):
+    def augment_image(self, image, mode, x_splits_number=2, y_splits_number=2, min_space_between_splits=5):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         augmented_image = np.copy(image)
 
