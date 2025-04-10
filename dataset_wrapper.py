@@ -1,17 +1,22 @@
 import torch
 from torch.utils.data import Dataset
+import numpy as np
+from Augumentor import Augumentor
+from STESAugmentor import STESAugmentor
+from PIL import Image
+
 
 class DatasetWrapper(Dataset):
-    def __init__(self, dataset, augmentor=None, type=None):
+    def __init__(self, dataset, augmentor=None, mode=None):
         """
         Args:
             dataset (Dataset): A PyTorch dataset object.
             augmentor (Augumentor): A custom augumentor class obejct.
-            type (str): A string indicating the type of augumentation (in Augumentor could be "same", "different", or "combine).
+            mode (str): A string indicating the mode of augumentation (in Augumentor could be "same", "different", or "combine).
         """
         self.dataset = dataset
         self.augmentor = augmentor
-        self.type = type
+        self.mode = mode
 
     def __len__(self):
         return len(self.dataset)
@@ -19,13 +24,25 @@ class DatasetWrapper(Dataset):
     def __getitem__(self, idx):
         sample = self.dataset[idx]
         image, label = sample
-
+        image_np = np.array(image)
+        if image_np.ndim == 3 and image_np.shape[0] in [1, 3, 4]:
+            #print("[DEBUG] Permuting (C, H, W) -> (H, W, C)")
+            image_np = np.transpose(image_np, (1, 2, 0))
         if self.augmentor:
-            if isinstance(self.augmentor, Augmentor) and self.type is not None:
-                if self.type not in ['same', 'different', 'combine']:
-                    raise ValueError("Invalid type. Choose 'same', 'different', or 'combine'.")
-                image = self.augmentor.augument_image(image, type=self.type) #do dodania ewentualnie parametry num_splits itd, w zależności czy to ustalone będzie czy losowane gdzieś
+            if isinstance(self.augmentor, Augumentor) and self.mode is not None:
+                if self.mode not in ['same', 'different', 'combine']:
+                    print("WARNING! Invalid mode. Choose 'same', 'different', or 'combine'. Changing to default 'different'.")
+                    self.mode = 'different'
+                    self.augmentor.mode = self.mode
+                image_aug = self.augmentor.augment_image(image_np, mode=self.mode)
+                #permute back to (C, H, W) if needed
+                image_aug = np.transpose(image_aug, (2, 0, 1))
+                image = image_aug
+                
             elif isinstance(self.augmentor, STESAugmentor):
-                image = self.augmentor.augment_image(image) #do dodania ewentualnie parametry alpha, beta
+                image_aug = self.augmentor.augment_image(image_np)
+                #permute back to (C, H, W) if needed
+                image_aug = np.transpose(image_aug, (2, 0, 1))
+                image = image_aug #do dodania ewentualnie parametry alpha, beta
 
         return image, label

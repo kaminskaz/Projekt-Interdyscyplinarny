@@ -54,7 +54,6 @@ class Augumentor:
             },
         }
 
-
    
     
     def load_image(self, path):
@@ -81,19 +80,36 @@ class Augumentor:
         Ensures the minimum space between splits is maintained.
         """
         def generate_splits(length, num_splits, min_space):
-            splits = [0, length]  # Start and end boundaries
+            if length < (num_splits + 1) * min_space:
+                print(f"Warning: Length {length} is too small for {num_splits} splits with min space {min_space}. Adjusting.")
+                num_splits = (length // min_space) - 1  # Adjust number of splits to fit the length
+                if num_splits < 0:
+                    raise ValueError("Cannot create splits with the given parameters.")
 
-            while len(splits) < num_splits + 1:
-                split = random.randint(min_space, length - min_space)  # Ensure within bounds
+
+            max_possible_splits = (length // min_space) - 1
+            if num_splits > max_possible_splits:
+                print(f"Warning: Requested {num_splits} splits, but only {max_possible_splits} possible for length={length}. Adjusting.")
+                num_splits = max_possible_splits
+
+            splits = [0, length]  # Start and end boundaries
+            attempts = 0
+            max_attempts = 1000
+
+            while len(splits) < num_splits + 1 and attempts < max_attempts:
+                split = random.randint(min_space, length - min_space)
                 if all(abs(split - s) >= min_space for s in splits):
                     splits.append(split)
+                attempts += 1
 
-            splits = sorted(set(splits))  # Ensure unique, sorted splits
-            return splits
-        
+            if len(splits) < num_splits + 1:
+                raise RuntimeError(f"Could not find {num_splits} valid splits within {max_attempts} attempts. Got {len(splits)-2}.")
+
+            return sorted(set(splits))
+
         x_splits = generate_splits(width, vertical_splits_number, min_space_between_splits)
         y_splits = generate_splits(height, horizontal_splits_number, min_space_between_splits)
-        
+
         return x_splits, y_splits
     
     def extract_segment(self,image, x1, y1, x2, y2):
@@ -121,8 +137,11 @@ class Augumentor:
                 yield x1, y1, x2, y2, segment
 
                 
-    def augment_image(self, image, mode, x_splits_number=2, y_splits_number=2, min_space_between_splits=5):
+    def augment_image(self, image, mode, x_splits_number=2, y_splits_number=2, min_space_between_splits=20):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
+        if image.shape[-1] == 4:
+            print("Alpha channel detected, converting from BGRA to BGR")
+            image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)  
         augmented_image = np.copy(image)
 
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
