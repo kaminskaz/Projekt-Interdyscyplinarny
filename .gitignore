@@ -13,3 +13,6 @@ Thumbs.db         # dla systemów Windows
 
 *.log
 
+.venv/
+data/
+.DS_Store
