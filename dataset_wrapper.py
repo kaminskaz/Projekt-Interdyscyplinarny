@@ -25,6 +25,9 @@ class DatasetWrapper(Dataset):
     def num_classes(self):
         return len(self.dataset.classes)
 
+    def get_name(self):
+        return self.dataset.__class__.__name__
+
     def __getitem__(self, idx):
         sample = self.dataset[idx]
         image, label = sample

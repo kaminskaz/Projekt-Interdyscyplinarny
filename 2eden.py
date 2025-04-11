@@ -22,6 +22,8 @@ from STESAugmentor import STESAugmentor
 import random
 import os
 import copy
+import pandas as pd
+import sklearn.metrics as metrics
 
 
 SEED = 42
@@ -103,10 +105,13 @@ modes = ["same", "different", "combine"]
 batch_size = 64
 epochs = 50  # You can adjust the number of epochs
 learning_rate = 0.001
-
+optimizer = optim.Adam(efficientnet_b0_pretrained.parameters(), lr=learning_rate)
+criterion = nn.CrossEntropyLoss()
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def train(model, train_loader, optimizer, criterion, device, epochs=5):
     model.train()
+    hist = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     for epoch in range(epochs):
         running_loss = 0.0
         correct = 0
@@ -131,14 +136,26 @@ def train(model, train_loader, optimizer, criterion, device, epochs=5):
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+        recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro')
+        precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro')
+        f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro')
+        hist = hist.append({"epoch": epoch+1,
+                             "loss": running_loss/len(train_loader), 
+                             "accuracy": 100 * correct/total,
+                             "recall" : recall,
+                             "precision" : precision,
+                             "f1" : f1
+                            }, ignore_index=True)
+    hist.to_csv(f"{model.__class__.__name__}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv", index=False)
+    torch.save(model.state_dict(), f"{model.__class__.__name__}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
         
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {running_loss/len(train_loader):.4f}, Accuracy: {100 * correct/total:.2f}%")
 
 def evaluate(model, test_loader, criterion, device):
     model.eval()
     running_loss = 0.0
     correct = 0
     total = 0
+    res = pd.DataFrame(columns=["loss", "accuracy", "recall", "precision", "f1"])
     with torch.no_grad():
         for inputs, labels in test_loader:
             inputs, labels = inputs.to(device), labels.to(device)
@@ -151,44 +168,44 @@ def evaluate(model, test_loader, criterion, device):
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+    # Calculate metrics
+    recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro')
+    precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro')
+    f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro')
+    res = res.append({"loss": running_loss/len(test_loader), 
+                      "accuracy": 100 * correct/total,
+                      "recall" : recall,
+                      "precision" : precision,
+                      "f1" : f1
+                     }, ignore_index=True)
+    res.to_csv(f"{model.__class__.__name__}_{test_loader.dataset.get_name()}_{test_loader.dataset.augmentor.__class__.__name__}_{test_loader.dataset.mode}_test.csv", index=False)
     
-    print(f"Test Loss: {running_loss/len(test_loader):.4f}, Test Accuracy: {100 * correct/total:.2f}%")
 
 
 
 for model in models:
     for dataset in datasets:
+        dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
         for augmentor in augmentors:
             if isinstance(augmentor, Augumentor):
                 for mode in modes:
-                    pass
+                    dataset_wrapped.mode = mode
+                    dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
+                    
+                    model = copy.deepcopy(model)
+                    model.classifier[1] = nn.Linear(in_features=1280, out_features=len(dataset_wrapped.num_classes()), bias=True)
+
+                    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                    model.to(device)
+                    criterion = nn.CrossEntropyLoss()
+                    optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+                    train(model, dataloader_train, optimizer, criterion, device)
+
+                    dataloader_test = DataLoader(DatasetWrapper(dataset[1], augmentor), batch_size=batch_size, shuffle=False)
+                    evaluate(model, dataloader_test, criterion, device)
+
             elif isinstance(augmentor, STESAugmentor):
                 pass
 
 
-model = copy.deepcopy(model)  # Create a copy of the model
-model.classifier[1] = nn.Linear(in_features=1280, out_features=len(dataset.num_classes()), bias=True)  # Adjust the classifier for the number of classes
-
-# Set up device (CUDA if available)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
-# Loss function and optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# Training loop
-
-
-# Start training
-train(model, cifar10_train_loader, optimizer, criterion, device)
-
-# Evaluate the model
-
-
-# Test the model
-evaluate(model, cifar10_test_loader, criterion, device)
-
-
-torch.save(model.state_dict(), "efficientnet_cifar10_empty.pth")
-print("Model saved as efficientnet_cifar10_empty.pth")
