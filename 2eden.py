@@ -194,7 +194,7 @@ def evaluate(model,model_name, test_loader, criterion, device):
 
 
 
-for i in len(models):
+for i in range(len(models)):
     for dataset in datasets:
         dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
         for augmentor in augmentors:
@@ -212,7 +212,7 @@ for i in len(models):
                     criterion = nn.CrossEntropyLoss()
                     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-                    train(model, model_name, dataloader_train, optimizer, criterion, device)
+                    train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
 
                     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
                     evaluate(model, model_name, dataloader_test, criterion, device)
