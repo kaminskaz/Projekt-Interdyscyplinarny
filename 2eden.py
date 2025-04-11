@@ -93,11 +93,18 @@ efficientnet_b0_pretrained = models.efficientnet_b0(weights=models.EfficientNet_
 efficientnet_b0_non_pretrained = models.efficientnet_b0(weights=None)
 
 # EfficientNet-B1 (you can change to B2, B3, etc. similarly)
-efficientnet_b1_pretrained = models.efficientnet_b1(weights=models.EfficientNet_B1_Weights.IMAGENET1K_V1)
-efficientnet_b1_non_pretrained = models.efficientnet_b1(weights=None)
+efficientnet_b7_pretrained = models.efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
+efficientnet_b7_non_pretrained = models.efficientnet_b7(weights=None)
 
 models = [efficientnet_b0_pretrained, efficientnet_b0_non_pretrained,
-         efficientnet_b1_pretrained, efficientnet_b1_non_pretrained]
+         efficientnet_b7_pretrained, efficientnet_b7_non_pretrained]
+
+model_names = [
+    "EfficientNet-B0 Pretrained",
+    "EfficientNet-B0 Non-Pretrained",
+    "EfficientNet-B7 Pretrained",
+    "EfficientNet-B7 Non-Pretrained"
+]
 
 modes = ["same", "different", "combine"]
 
@@ -109,7 +116,7 @@ optimizer = optim.Adam(efficientnet_b0_pretrained.parameters(), lr=learning_rate
 criterion = nn.CrossEntropyLoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def train(model, train_loader, optimizer, criterion, device, epochs=5):
+def train(model, model_name, train_loader, optimizer, criterion, device, epochs=5):
     model.train()
     hist = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     for epoch in range(epochs):
@@ -139,18 +146,20 @@ def train(model, train_loader, optimizer, criterion, device, epochs=5):
         recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro')
         precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro')
         f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro')
-        hist = hist.append({"epoch": epoch+1,
-                             "loss": running_loss/len(train_loader), 
-                             "accuracy": 100 * correct/total,
-                             "recall" : recall,
-                             "precision" : precision,
-                             "f1" : f1
-                            }, ignore_index=True)
-    hist.to_csv(f"{model.__class__.__name__}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv", index=False)
-    torch.save(model.state_dict(), f"{model.__class__.__name__}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
+        new_row = pd.DataFrame([{
+            "epoch": epoch + 1,
+            "loss": running_loss / len(train_loader),
+            "accuracy": 100 * correct / total,
+            "recall": recall,
+            "precision": precision,
+            "f1": f1
+        }])
+        hist = pd.concat([hist, new_row], ignore_index=True)
+    hist.to_csv(f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv", index=False)
+    torch.save(model.state_dict(), f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
         
 
-def evaluate(model, test_loader, criterion, device):
+def evaluate(model,model_name, test_loader, criterion, device):
     model.eval()
     running_loss = 0.0
     correct = 0
@@ -172,18 +181,20 @@ def evaluate(model, test_loader, criterion, device):
     recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro')
     precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro')
     f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro')
-    res = res.append({"loss": running_loss/len(test_loader), 
-                      "accuracy": 100 * correct/total,
-                      "recall" : recall,
-                      "precision" : precision,
-                      "f1" : f1
-                     }, ignore_index=True)
-    res.to_csv(f"{model.__class__.__name__}_{test_loader.dataset.get_name()}_{test_loader.dataset.augmentor.__class__.__name__}_{test_loader.dataset.mode}_test.csv", index=False)
+    new_row = pd.DataFrame([{
+        "loss": running_loss/len(test_loader),
+        "accuracy": 100 * correct/total,
+        "recall" : recall,
+        "precision" : precision,
+        "f1" : f1
+    }])
+    res = pd.concat([res, new_row], ignore_index=True)
+    res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{test_loader.dataset.augmentor.__class__.__name__}_{test_loader.dataset.mode}_test.csv", index=False)
     
 
 
 
-for model in models:
+for i in len(models):
     for dataset in datasets:
         dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
         for augmentor in augmentors:
@@ -192,7 +203,8 @@ for model in models:
                     dataset_wrapped.mode = mode
                     dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
                     
-                    model = copy.deepcopy(model)
+                    model = copy.deepcopy(models[i])
+                    model_name = model_names[i]
                     model.classifier[1] = nn.Linear(in_features=1280, out_features=dataset_wrapped.num_classes(), bias=True)
 
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -200,10 +212,10 @@ for model in models:
                     criterion = nn.CrossEntropyLoss()
                     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-                    train(model, dataloader_train, optimizer, criterion, device)
+                    train(model, model_name, dataloader_train, optimizer, criterion, device)
 
-                    dataloader_test = DataLoader(DatasetWrapper(dataset[1], augmentor), batch_size=batch_size, shuffle=False)
-                    evaluate(model, dataloader_test, criterion, device)
+                    dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
+                    evaluate(model, model_name, dataloader_test, criterion, device)
 
             elif isinstance(augmentor, STESAugmentor):
                 pass

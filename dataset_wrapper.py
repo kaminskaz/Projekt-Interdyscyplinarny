@@ -26,7 +26,8 @@ class DatasetWrapper(Dataset):
         return len(self.dataset.classes)
 
     def get_name(self):
-        return self.dataset.__class__.__name__
+        #get name and train or test
+        return self.dataset.__class__.__name__ + self.dataset.train.__str__()
 
     def __getitem__(self, idx):
         sample = self.dataset[idx]
