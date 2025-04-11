@@ -1,22 +1,23 @@
 import torch
 from torch.utils.data import Dataset
 import numpy as np
-from Augumentor import Augumentor
+from Augmentor import Augmentor
 from STESAugmentor import STESAugmentor
 from PIL import Image
 
 
 class DatasetWrapper(Dataset):
-    def __init__(self, dataset, augmentor=None, mode=None):
+    def __init__(self, dataset, augmentor=None, mode=None, p = 0.5):
         """
         Args:
             dataset (Dataset): A PyTorch dataset object.
-            augmentor (Augumentor): A custom augumentor class obejct.
-            mode (str): A string indicating the mode of augumentation (in Augumentor could be "same", "different", or "combine).
+            augmentor (Augmentor): A custom Augmentor class obejct.
+            mode (str): A string indicating the mode of augumentation (in Augmentor could be "same", "different", or "combine).
         """
         self.dataset = dataset
         self.augmentor = augmentor
         self.mode = mode
+        self.p = p
 
     def __len__(self):
         return len(self.dataset)
@@ -29,7 +30,8 @@ class DatasetWrapper(Dataset):
             #print("[DEBUG] Permuting (C, H, W) -> (H, W, C)")
             image_np = np.transpose(image_np, (1, 2, 0))
         if self.augmentor:
-            if isinstance(self.augmentor, Augumentor) and self.mode is not None:
+            if isinstance(self.augmentor, Augmentor) and self.mode is not None:
+                self.augmentor.p = self.p
                 if self.mode not in ['same', 'different', 'combine']:
                     print("WARNING! Invalid mode. Choose 'same', 'different', or 'combine'. Changing to default 'different'.")
                     self.mode = 'different'

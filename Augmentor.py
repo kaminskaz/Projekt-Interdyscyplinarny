@@ -7,50 +7,51 @@ import matplotlib.pyplot as plt
 import os
 
 
-class Augumentor:
-    def __init__(self, seed=123):
+class Augmentor:
+    def __init__(self, p=0.5, seed=123):
         self.seed = seed
         np.random.seed(seed)
         random.seed(seed)
+        self.p = p
     
         self.aug_dictionary = {
             1: {  # flips and mirrors
-                1: lambda p: A.HorizontalFlip(p=p), 
-                2: lambda p: A.VerticalFlip(p=p),  
-                3: lambda p: A.Compose([A.HorizontalFlip(p=p), A.VerticalFlip(p=p)])
+                1: lambda p: A.HorizontalFlip(p=self.p), 
+                2: lambda p: A.VerticalFlip(p=self.p),  
+                3: lambda p: A.Compose([A.HorizontalFlip(p=self.p), A.VerticalFlip(p=self.p)])
             },
             2: {  # rotations
-                1: lambda p: A.Rotate(limit=(5,5), p=p), 
-                2: lambda p: A.Rotate(limit=(10,10), p=p), 
-                3: lambda p: A.Rotate(limit=(15,15), p=p),  
-                4: lambda p: A.Rotate(limit=(20,20), p=p)  
+                1: lambda p: A.Rotate(limit=(5,5), p=self.p), 
+                2: lambda p: A.Rotate(limit=(10,10), p=self.p), 
+                3: lambda p: A.Rotate(limit=(15,15), p=self.p),  
+                4: lambda p: A.Rotate(limit=(20,20), p=self.p)  
             },
             3: {  # blurs
-                1: lambda p: A.GaussianBlur(blur_limit=(5, 5), p=p), 
-                2: lambda p: A.GaussianBlur(blur_limit=(8, 8), p=p), 
-                3: lambda p: A.GaussianBlur(blur_limit=(11, 11), p=p),
-                4: lambda p: A.GaussianBlur(blur_limit=(14, 14), p=p)
+                1: lambda p: A.GaussianBlur(blur_limit=(5, 5), p=self.p), 
+                2: lambda p: A.GaussianBlur(blur_limit=(8, 8), p=self.p), 
+                3: lambda p: A.GaussianBlur(blur_limit=(11, 11), p=self.p),
+                4: lambda p: A.GaussianBlur(blur_limit=(14, 14), p=self.p)
             },
             4: {  # brightness and contrast
-                1: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=p), 
-                2: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.2, 0.2), contrast_limit=(0.2, 0.2), p=p),  
-                3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.3, 0.3), contrast_limit=(0.3, 0.3), p=p), 
-                4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.4, 0.4), contrast_limit=(0.4, 0.4), p=p) 
+                1: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=self.p), 
+                2: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.2, 0.2), contrast_limit=(0.2, 0.2), p=self.p),  
+                3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.3, 0.3), contrast_limit=(0.3, 0.3), p=self.p), 
+                4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.4, 0.4), contrast_limit=(0.4, 0.4), p=self.p) 
             },
             5: {  # noises
-                1: lambda p: A.GaussNoise(std_range=(0.1,0.1), p=p),
-                2: lambda p: A.GaussNoise(std_range=(0.2,0.2), p=p),  
-                3: lambda p: A.GaussNoise(std_range=(0.3,0.3), p=p),  
-                4: lambda p: A.GaussNoise(std_range=(0.4,0.4), p=p) 
+                1: lambda p: A.GaussNoise(std_range=(0.1,0.1), p=self.p),
+                2: lambda p: A.GaussNoise(std_range=(0.2,0.2), p=self.p),  
+                3: lambda p: A.GaussNoise(std_range=(0.3,0.3), p=self.p),  
+                4: lambda p: A.GaussNoise(std_range=(0.4,0.4), p=self.p) 
             },
             6: {  # color adjustments
-                1: lambda p: A.HueSaturationValue(hue_shift_limit=(10,10), sat_shift_limit=(10, 10), val_shift_limit=(10, 10), p=p),  
-                2: lambda p: A.HueSaturationValue(hue_shift_limit=(20, 20), sat_shift_limit=(20, 20), val_shift_limit=(20, 20), p=p), 
-                3: lambda p: A.HueSaturationValue(hue_shift_limit=(30, 30), sat_shift_limit=(30, 30), val_shift_limit=(30, 30), p=p), 
+                1: lambda p: A.HueSaturationValue(hue_shift_limit=(10,10), sat_shift_limit=(10, 10), val_shift_limit=(10, 10), p=self.p),  
+                2: lambda p: A.HueSaturationValue(hue_shift_limit=(20, 20), sat_shift_limit=(20, 20), val_shift_limit=(20, 20), p=self.p), 
+                3: lambda p: A.HueSaturationValue(hue_shift_limit=(30, 30), sat_shift_limit=(30, 30), val_shift_limit=(30, 30), p=self.p), 
             },
             7: {  # negative & black and white
-                1: lambda p: A.InvertImg(p=p),
-                2: lambda p: A.ToGray(p=p),
+                1: lambda p: A.InvertImg(p=self.p),
+                2: lambda p: A.ToGray(p=self.p),
             },
         }
 
@@ -153,14 +154,14 @@ class Augumentor:
             aug_type = random.randint(1, len(self.aug_dictionary))
             for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
                 aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
-                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=1.0)(image=segment)['image']
+                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=self.p)(image=segment)['image']
                 augmented_image[y1:y2, x1:x2] = augmented_segment
 
         if mode == 'different':
             for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
                 aug_type = random.randint(1, len(self.aug_dictionary))
                 aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
-                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=1.0)(image=segment)['image']
+                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=self.p)(image=segment)['image']
                 augmented_image[y1:y2, x1:x2] = augmented_segment
 
         if mode == 'combine':
@@ -171,7 +172,7 @@ class Augumentor:
                 for aug_type in chosen_augmentations:
                     aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
                     augment = self.aug_dictionary[aug_type][aug_power]
-                    augmented_segment = augment(p=1.0)(image=augmented_segment)['image']
+                    augmented_segment = augment(p=self.p)(image=augmented_segment)['image']
                 augmented_image[y1:y2, x1:x2] = augmented_segment
 
         return augmented_image
