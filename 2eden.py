@@ -25,6 +25,20 @@ import copy
 import pandas as pd
 import sklearn.metrics as metrics
 
+with open("device_info.txt", "w") as f:
+    f.write(f"CUDA available: {torch.cuda.is_available()}\n")
+    f.write(f"CUDA device count: {torch.cuda.device_count()}\n")
+    
+    if torch.cuda.is_available():
+        device_index = torch.cuda.current_device()
+        device_name = torch.cuda.get_device_name(device_index)
+        f.write(f"Current device index: {device_index}\n")
+        f.write(f"Device name: {device_name}\n")
+    else:
+        f.write("Running on CPU")
+
+
+
 
 SEED = 42
 
