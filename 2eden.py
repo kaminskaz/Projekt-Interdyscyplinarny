@@ -217,7 +217,22 @@ for i in range(len(models)):
                     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
                     evaluate(model, model_name, dataloader_test, criterion, device)
 
-            elif isinstance(augmentor, STESAugmentor):
-                pass
+            else:
+                dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
+                
+                model = copy.deepcopy(models[i])
+                model_name = model_names[i]
+                model.classifier[1] = nn.Linear(in_features=1280, out_features=dataset_wrapped.num_classes(), bias=True)
+
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                model.to(device)
+                criterion = nn.CrossEntropyLoss()
+                optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+                train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
+
+                dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
+                evaluate(model, model_name, dataloader_test, criterion, device)
+                
 
 
