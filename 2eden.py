@@ -110,7 +110,7 @@ modes = ["same", "different", "combine"]
 
 # Hyperparameters
 batch_size = 64
-epochs = 50  # You can adjust the number of epochs
+epochs = 20  # You can adjust the number of epochs
 learning_rate = 0.001
 optimizer = optim.Adam(efficientnet_b0_pretrained.parameters(), lr=learning_rate)
 criterion = nn.CrossEntropyLoss()
@@ -120,6 +120,7 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
     model.train()
     hist = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     for epoch in range(epochs):
+        print(f"Epoch {epoch + 1}/{epochs}")
         running_loss = 0.0
         correct = 0
         total = 0
@@ -156,6 +157,7 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
         }])
         hist = pd.concat([hist, new_row], ignore_index=True)
     hist.to_csv(f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv", index=False)
+    print(f"saved {model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv")
     torch.save(model.state_dict(), f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
         
 
