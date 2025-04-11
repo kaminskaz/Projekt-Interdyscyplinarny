@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import cv2
 from PIL import Image
 
-from Augmentor import Augumentor
+from Augmentor import Augmentor
 from dataset_wrapper import DatasetWrapper
 from STESAugmentor import STESAugmentor
 import random
@@ -67,7 +67,7 @@ fashion_mnist_test = FashionMNIST(root="./data", train=False, transform=get_tran
 
 datasets = [(cifar10_train, cifar10_test), (fashion_mnist_train, fashion_mnist_test)]
 
-augmentor = Augumentor()
+augmentor = Augmentor()
 stes_augmentor = STESAugmentor()
 
 augmentors = [augmentor, stes_augmentor, None]
@@ -187,13 +187,13 @@ for model in models:
     for dataset in datasets:
         dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
         for augmentor in augmentors:
-            if isinstance(augmentor, Augumentor):
+            if isinstance(augmentor, Augmentor):
                 for mode in modes:
                     dataset_wrapped.mode = mode
                     dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
                     
                     model = copy.deepcopy(model)
-                    model.classifier[1] = nn.Linear(in_features=1280, out_features=len(dataset_wrapped.num_classes()), bias=True)
+                    model.classifier[1] = nn.Linear(in_features=1280, out_features=dataset_wrapped.num_classes(), bias=True)
 
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     model.to(device)
