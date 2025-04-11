@@ -21,6 +21,9 @@ class DatasetWrapper(Dataset):
 
     def __len__(self):
         return len(self.dataset)
+    
+    def num_classes(self):
+        return len(self.dataset.classes)
 
     def __getitem__(self, idx):
         sample = self.dataset[idx]
