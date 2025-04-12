@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 import cv2
 from PIL import Image
 
-from Augmentor import Augmentor
-from dataset_wrapper import DatasetWrapper
-from STESAugmentor import STESAugmentor
+from code.Augmentor import Augmentor
+from code.dataset_wrapper import DatasetWrapper
+from code.STESAugmentor import STESAugmentor
 import random
 import os
 import copy
@@ -175,7 +175,7 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
     torch.save(model.state_dict(), f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
         
 
-def evaluate(model,model_name, test_loader, criterion, device):
+def evaluate(model, model_name, test_loader, augmentor, criterion, device):
     model.eval()
     running_loss = 0.0
     correct = 0
@@ -205,15 +205,15 @@ def evaluate(model,model_name, test_loader, criterion, device):
         "f1" : f1
     }])
     res = pd.concat([res, new_row], ignore_index=True)
-    res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{test_loader.dataset.augmentor.__class__.__name__}_{test_loader.dataset.mode}_test.csv", index=False)
+    res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{augmentor.__class__.__name__}_{test_loader.dataset.mode}_test.csv", index=False)
     
 
 
 
 for i in range(len(models)):
     for dataset in datasets:
-        dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
         for augmentor in augmentors:
+            dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
             if isinstance(augmentor, Augmentor):
                 for mode in modes:
                     dataset_wrapped.mode = mode
@@ -231,7 +231,7 @@ for i in range(len(models)):
                     train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
 
                     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
-                    evaluate(model, model_name, dataloader_test, criterion, device)
+                    evaluate(model, model_name, dataloader_test, augmentor, criterion, device)
 
             else:
                 dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
@@ -248,7 +248,7 @@ for i in range(len(models)):
                 train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
 
                 dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
-                evaluate(model, model_name, dataloader_test, criterion, device)
+                evaluate(model, model_name, dataloader_test, augmentor, criterion, device)
                 
 
 
