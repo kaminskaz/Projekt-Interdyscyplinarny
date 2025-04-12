@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 import cv2
 from PIL import Image
 
-from code.Augmentor import Augmentor
-from code.dataset_wrapper import DatasetWrapper
-from code.STESAugmentor import STESAugmentor
+from Augmentor import Augmentor
+from dataset_wrapper import DatasetWrapper
+from STESAugmentor import STESAugmentor
 import random
 import os
 import copy
