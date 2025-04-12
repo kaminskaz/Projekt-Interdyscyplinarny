@@ -1,8 +1,8 @@
 import torch
 from torch.utils.data import Dataset
 import numpy as np
-from code.Augmentor import Augmentor
-from code.STESAugmentor import STESAugmentor
+from Augmentor import Augmentor
+from STESAugmentor import STESAugmentor
 from PIL import Image
 
 
