@@ -205,7 +205,7 @@ def evaluate(model, model_name, test_loader, augmentor, criterion, device):
         "f1" : f1
     }])
     res = pd.concat([res, new_row], ignore_index=True)
-    res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{augmentor.__class__.__name__}_{test_loader.dataset.mode}_test.csv", index=False)
+    res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{augmentor.__class__.__name__}_{augmentor.mode}_test.csv", index=False)
     
 
 
