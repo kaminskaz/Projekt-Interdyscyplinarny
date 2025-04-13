@@ -37,9 +37,6 @@ with open("device_info.txt", "w") as f:
     else:
         f.write("Running on CPU")
 
-
-
-
 SEED = 42
 
 def seed_everything(seed: int=42):
@@ -52,10 +49,7 @@ def seed_everything(seed: int=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-
 seed_everything(SEED)
-
-
 
 #preprocessing
 def get_transform(is_grayscale=False):
@@ -86,17 +80,6 @@ stes_augmentor = STESAugmentor()
 
 augmentors = [augmentor, stes_augmentor, None]
 
-cifar_10_train_wrapped_aug = DatasetWrapper(cifar10_train, augmentor, "different")
-cifar_10_train_wrapped_stes = DatasetWrapper(cifar10_train, stes_augmentor)
-
-fashion_mnist_train_wrapped_aug = DatasetWrapper(fashion_mnist_train, augmentor, "different")
-fashion_mnist_train_wrapped_stes = DatasetWrapper(fashion_mnist_train, stes_augmentor)
-
-# Create DataLoaders
-
-
-
-
 # Define class names for both datasets
 cifar10_classes = cifar10_train.classes
 fashion_mnist_classes = fashion_mnist_train.classes
@@ -106,7 +89,7 @@ fashion_mnist_classes = fashion_mnist_train.classes
 efficientnet_b0_pretrained = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
 efficientnet_b0_non_pretrained = models.efficientnet_b0(weights=None)
 
-# EfficientNet-B1 (you can change to B2, B3, etc. similarly)
+# EfficientNet-B7 (you can change to B2, B3, etc. similarly)
 efficientnet_b7_pretrained = models.efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
 efficientnet_b7_non_pretrained = models.efficientnet_b7(weights=None)
 
@@ -169,7 +152,6 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
     hist.to_csv(f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv", index=False)
     print(f"saved {model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv")
     torch.save(model.state_dict(), f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
-        
 
 def evaluate(model, model_name, test_loader, augmentor, mode, criterion, device):
     model.eval()
@@ -202,9 +184,6 @@ def evaluate(model, model_name, test_loader, augmentor, mode, criterion, device)
     }])
     res = pd.concat([res, new_row], ignore_index=True)
     res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{augmentor.__class__.__name__}_{mode}_test.csv", index=False)
-    
-
-
 
 for i in range(len(models)):
     for dataset in datasets:
@@ -217,7 +196,8 @@ for i in range(len(models)):
                     
                     model = copy.deepcopy(models[i])
                     model_name = model_names[i]
-                    model.classifier[1] = nn.Linear(in_features=1280, out_features=dataset_wrapped.num_classes(), bias=True)
+                    in_features = model.classifier[1].in_features
+                    model.classifier[1] = nn.Linear(in_features=in_features, out_features=dataset_wrapped.num_classes(), bias=True)
 
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     model.to(device)
