@@ -93,14 +93,11 @@ efficientnet_b0_non_pretrained = models.efficientnet_b0(weights=None)
 efficientnet_b7_pretrained = models.efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
 efficientnet_b7_non_pretrained = models.efficientnet_b7(weights=None)
 
-models = [efficientnet_b0_pretrained, efficientnet_b0_non_pretrained,
-         efficientnet_b7_pretrained, efficientnet_b7_non_pretrained]
+models = [
+         efficientnet_b7_pretrained]
 
 model_names = [
-    "EfficientNet-B0 Pretrained",
-    "EfficientNet-B0 Non-Pretrained",
-    "EfficientNet-B7 Pretrained",
-    "EfficientNet-B7 Non-Pretrained"
+    "EfficientNet-B7 Pretrained"
 ]
 
 modes = ["same", "different", "combine"]
