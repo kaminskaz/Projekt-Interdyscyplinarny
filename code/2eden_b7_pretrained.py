@@ -245,7 +245,7 @@ for i in range(len(models)):
                 train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
 
                 dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
-                evaluate(model, model_name, dataloader_test, augmentor, criterion, None, device)
+                evaluate(model, model_name, dataloader_test, augmentor, None, criterion, device)
                 
 
 
