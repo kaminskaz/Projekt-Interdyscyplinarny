@@ -126,9 +126,9 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-        recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro')
-        precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro')
-        f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro')
+        recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
+        precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
+        f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
         new_row = pd.DataFrame([{
             "epoch": epoch + 1,
             "loss": running_loss / len(train_loader),
@@ -161,9 +161,9 @@ def evaluate(model, model_name, test_loader, augmentor, mode, criterion, device)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
     # Calculate metrics
-    recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro')
-    precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro')
-    f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro')
+    recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
+    precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
+    f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
     new_row = pd.DataFrame([{
         "loss": running_loss/len(test_loader),
         "accuracy": 100 * correct/total,
