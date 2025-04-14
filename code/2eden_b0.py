@@ -25,17 +25,6 @@ import copy
 import pandas as pd
 import sklearn.metrics as metrics
 
-with open("device_info.txt", "w") as f:
-    f.write(f"CUDA available: {torch.cuda.is_available()}\n")
-    f.write(f"CUDA device count: {torch.cuda.device_count()}\n")
-    
-    if torch.cuda.is_available():
-        device_index = torch.cuda.current_device()
-        device_name = torch.cuda.get_device_name(device_index)
-        f.write(f"Current device index: {device_index}\n")
-        f.write(f"Device name: {device_name}\n")
-    else:
-        f.write("Running on CPU")
 
 SEED = 42
 
@@ -214,8 +203,8 @@ for i in range(len(models)):
                 
                 model = copy.deepcopy(models[i])
                 model_name = model_names[i]
-                model.classifier[1] = nn.Linear(in_features=1280, out_features=dataset_wrapped.num_classes(), bias=True)
-
+                in_features = model.classifier[1].in_features
+                model.classifier[1] = nn.Linear(in_features=in_features, out_features=dataset_wrapped.num_classes(), bias=True)
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                 model.to(device)
                 criterion = nn.CrossEntropyLoss()
