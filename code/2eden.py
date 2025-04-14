@@ -24,6 +24,7 @@ import os
 import copy
 import pandas as pd
 import sklearn.metrics as metrics
+from sklearn.model_selection import train_test_split
 
 
 SEED = 42
@@ -182,10 +183,20 @@ for i in range(len(models)):
     for dataset in datasets:
         for augmentor in augmentors:
             dataset_wrapped = DatasetWrapper(dataset[0], augmentor)
+
+
             if isinstance(augmentor, Augmentor):
                 for mode in modes:
                     dataset_wrapped.mode = mode
-                    dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
+
+                    indices = list(range(len(dataset_wrapped)))
+                    labels = [dataset_wrapped[idx][1] for idx in indices]
+                    train_idx, val_idx = train_test_split(indices, test_size=0.2, random_state=SEED, stratify=labels)
+                    train_subset = Subset(dataset_wrapped, train_idx)
+                    val_subset = Subset(dataset_wrapped, val_idx)
+
+                    dataloader_train = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+                    dataloader_val = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
                     
                     model = copy.deepcopy(models[i])
                     model_name = model_names[i]
@@ -199,11 +210,22 @@ for i in range(len(models)):
 
                     train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
 
+                    # Evaluate on validation set
+                    evaluate(model, model_name, dataloader_val, augmentor, mode+"_val", criterion, device)
+
+                    # Evaluate on test set
                     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
                     evaluate(model, model_name, dataloader_test, augmentor, mode, criterion, device)
 
             else:
-                dataloader_train = DataLoader(dataset_wrapped, batch_size=batch_size, shuffle=True)
+                indices = list(range(len(dataset_wrapped)))
+                labels = [dataset_wrapped[idx][1] for idx in indices]
+                train_idx, val_idx = train_test_split(indices, test_size=0.2, random_state=SEED, stratify=labels)
+                train_subset = Subset(dataset_wrapped, train_idx)
+                val_subset = Subset(dataset_wrapped, val_idx)
+
+                dataloader_train = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+                dataloader_val = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
                 
                 model = copy.deepcopy(models[i])
                 model_name = model_names[i]
@@ -217,6 +239,10 @@ for i in range(len(models)):
 
                 train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs)
 
+                # Evaluate on validation set
+                evaluate(model, model_name, dataloader_val, augmentor, "val", criterion, device)
+
+                # Evaluate on test set
                 dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
                 evaluate(model, model_name, dataloader_test, augmentor, None, criterion, device)
                 
