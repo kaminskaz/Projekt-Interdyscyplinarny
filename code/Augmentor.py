@@ -14,44 +14,75 @@ class Augmentor:
         random.seed(seed)
         self.p = p
     
+        # self.aug_dictionary = {
+        #     1: {  # flips and mirrors
+        #         1: lambda p: A.HorizontalFlip(p=self.p), 
+        #         2: lambda p: A.VerticalFlip(p=self.p),  
+        #         3: lambda p: A.Compose([A.HorizontalFlip(p=self.p), A.VerticalFlip(p=self.p)])
+        #     },
+        #     2: {  # rotations
+        #         1: lambda p: A.Rotate(limit=(5,5), p=self.p), 
+        #         2: lambda p: A.Rotate(limit=(10,10), p=self.p), 
+        #         3: lambda p: A.Rotate(limit=(15,15), p=self.p),  
+        #         4: lambda p: A.Rotate(limit=(20,20), p=self.p)  
+        #     },
+        #     3: {  # blurs
+        #         1: lambda p: A.GaussianBlur(blur_limit=(5, 5), p=self.p), 
+        #         2: lambda p: A.GaussianBlur(blur_limit=(8, 8), p=self.p), 
+        #         3: lambda p: A.GaussianBlur(blur_limit=(11, 11), p=self.p),
+        #         4: lambda p: A.GaussianBlur(blur_limit=(14, 14), p=self.p)
+        #     },
+        #     4: {  # brightness and contrast
+        #         1: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=self.p), 
+        #         2: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.2, 0.2), contrast_limit=(0.2, 0.2), p=self.p),  
+        #         3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.3, 0.3), contrast_limit=(0.3, 0.3), p=self.p), 
+        #         4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.4, 0.4), contrast_limit=(0.4, 0.4), p=self.p) 
+        #     },
+        #     5: {  # noises
+        #         1: lambda p: A.GaussNoise(std_range=(0.1,0.1), p=self.p),
+        #         2: lambda p: A.GaussNoise(std_range=(0.2,0.2), p=self.p),  
+        #         3: lambda p: A.GaussNoise(std_range=(0.3,0.3), p=self.p),  
+        #         4: lambda p: A.GaussNoise(std_range=(0.4,0.4), p=self.p) 
+        #     },
+        #     6: {  # color adjustments
+        #         1: lambda p: A.HueSaturationValue(hue_shift_limit=(10,10), sat_shift_limit=(10, 10), val_shift_limit=(10, 10), p=self.p),  
+        #         2: lambda p: A.HueSaturationValue(hue_shift_limit=(20, 20), sat_shift_limit=(20, 20), val_shift_limit=(20, 20), p=self.p), 
+        #         3: lambda p: A.HueSaturationValue(hue_shift_limit=(30, 30), sat_shift_limit=(30, 30), val_shift_limit=(30, 30), p=self.p), 
+        #     },
+        #     7: {  # negative & black and white
+        #         1: lambda p: A.InvertImg(p=self.p),
+        #         2: lambda p: A.ToGray(p=self.p),
+        #     },
+        # }
         self.aug_dictionary = {
-            1: {  # flips and mirrors
-                1: lambda p: A.HorizontalFlip(p=self.p), 
-                2: lambda p: A.VerticalFlip(p=self.p),  
-                3: lambda p: A.Compose([A.HorizontalFlip(p=self.p), A.VerticalFlip(p=self.p)])
+            1: {  # rotations
+                1: lambda p: A.Rotate(limit=(-2,2), p=self.p), 
+                2: lambda p: A.Rotate(limit=(-4,4), p=self.p), 
+                3: lambda p: A.Rotate(limit=(-6,6), p=self.p),  
+                4: lambda p: A.Rotate(limit=(-8,8), p=self.p)  
             },
-            2: {  # rotations
-                1: lambda p: A.Rotate(limit=(5,5), p=self.p), 
-                2: lambda p: A.Rotate(limit=(10,10), p=self.p), 
-                3: lambda p: A.Rotate(limit=(15,15), p=self.p),  
-                4: lambda p: A.Rotate(limit=(20,20), p=self.p)  
-            },
-            3: {  # blurs
+            2: {  # blurs
                 1: lambda p: A.GaussianBlur(blur_limit=(5, 5), p=self.p), 
                 2: lambda p: A.GaussianBlur(blur_limit=(8, 8), p=self.p), 
                 3: lambda p: A.GaussianBlur(blur_limit=(11, 11), p=self.p),
                 4: lambda p: A.GaussianBlur(blur_limit=(14, 14), p=self.p)
             },
-            4: {  # brightness and contrast
-                1: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=self.p), 
-                2: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.2, 0.2), contrast_limit=(0.2, 0.2), p=self.p),  
-                3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.3, 0.3), contrast_limit=(0.3, 0.3), p=self.p), 
-                4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.4, 0.4), contrast_limit=(0.4, 0.4), p=self.p) 
+            3: {  # brightness and contrast
+                1: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.03, 0.03), contrast_limit=(0.03, 0.03), p=self.p), 
+                2: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.05, 0.05), contrast_limit=(0.05, 0.05), p=self.p),  
+                3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.08, 0.08), contrast_limit=(0.08, 0.08), p=self.p), 
+                4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=self.p) 
             },
-            5: {  # noises
-                1: lambda p: A.GaussNoise(std_range=(0.1,0.1), p=self.p),
-                2: lambda p: A.GaussNoise(std_range=(0.2,0.2), p=self.p),  
-                3: lambda p: A.GaussNoise(std_range=(0.3,0.3), p=self.p),  
-                4: lambda p: A.GaussNoise(std_range=(0.4,0.4), p=self.p) 
+            4: {  # noises
+                1: lambda p: A.GaussNoise(std_range=(0.01,0.01), p=self.p),
+                2: lambda p: A.GaussNoise(std_range=(0.02,0.02), p=self.p),  
+                3: lambda p: A.GaussNoise(std_range=(0.03,0.03), p=self.p),  
+                4: lambda p: A.GaussNoise(std_range=(0.05,0.05), p=self.p) 
             },
-            6: {  # color adjustments
-                1: lambda p: A.HueSaturationValue(hue_shift_limit=(10,10), sat_shift_limit=(10, 10), val_shift_limit=(10, 10), p=self.p),  
-                2: lambda p: A.HueSaturationValue(hue_shift_limit=(20, 20), sat_shift_limit=(20, 20), val_shift_limit=(20, 20), p=self.p), 
-                3: lambda p: A.HueSaturationValue(hue_shift_limit=(30, 30), sat_shift_limit=(30, 30), val_shift_limit=(30, 30), p=self.p), 
-            },
-            7: {  # negative & black and white
-                1: lambda p: A.InvertImg(p=self.p),
-                2: lambda p: A.ToGray(p=self.p),
+            5: {  # color adjustments
+                1: lambda p: A.HueSaturationValue(hue_shift_limit=(-1, 1), sat_shift_limit=(-1, 1), val_shift_limit=(-1, 1), p=self.p),  
+                2: lambda p: A.HueSaturationValue(hue_shift_limit=(-2, 2), sat_shift_limit=(-2, 2), val_shift_limit=(-2, 2), p=self.p), 
+                3: lambda p: A.HueSaturationValue(hue_shift_limit=(-3, 3), sat_shift_limit=(-3, 3), val_shift_limit=(-3, 3), p=self.p), 
             },
         }
 
@@ -107,7 +138,7 @@ class Augmentor:
                 raise RuntimeError(f"Could not find {num_splits} valid splits within {max_attempts} attempts. Got {len(splits)-2}.")
 
             return sorted(set(splits))
-
+        
         x_splits = generate_splits(width, vertical_splits_number, min_space_between_splits)
         y_splits = generate_splits(height, horizontal_splits_number, min_space_between_splits)
 
@@ -138,12 +169,15 @@ class Augmentor:
                 yield x1, y1, x2, y2, segment
 
                 
-    def augment_image(self, image, mode, x_splits_number=2, y_splits_number=2, min_space_between_splits=20):
+    def augment_image(self, image, mode, x_splits_number=9, y_splits_number=9, min_space_between_splits=10):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         if image.shape[-1] == 4:
             print("Alpha channel detected, converting from BGRA to BGR")
             image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)  
         augmented_image = np.copy(image)
+
+        x_splits_number = random.randint(1, x_splits_number)
+        y_splits_number = random.randint(1, y_splits_number)
 
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
 
@@ -183,10 +217,10 @@ class Augmentor:
     
     def process_image(self, path = None, output_path = None, x_splits_number=0, y_splits_number=0, min_space_between_splits=0,  mode='different', image = None):
         
-        if self.path is not None:
+        if path is not None:
             image = self.load_image(path)
 
-        augmented_image = self.augment_image(image, x_splits_number, y_splits_number, min_space_between_splits, mode)
+        augmented_image = self.augment_image(image=image, x_splits_number=x_splits_number, y_splits_number=y_splits_number, min_space_between_splits=min_space_between_splits, mode=mode)
         
         self.display_images(image, augmented_image)
 
