@@ -143,9 +143,10 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
             "f1": f1
         }])
         hist = pd.concat([hist, new_row], ignore_index=True)
-    hist.to_csv(f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv", index=False)
-    print(f"saved {model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.csv")
-    torch.save(model.state_dict(), f"{model_name}_{train_loader.dataset.get_name()}_{train_loader.dataset.augmentor.__class__.__name__}_{train_loader.dataset.mode}.pth")
+    hist.to_csv(f"{model_name}_{train_loader.dataset.dataset.get_name()}_{train_loader.dataset.dataset.augmentor.__class__.__name__}_{train_loader.dataset.dataset.mode}.csv", index=False)
+    print(f"saved {model_name}_{train_loader.dataset.dataset.get_name()}_{train_loader.dataset.dataset.augmentor.__class__.__name__}_{train_loader.dataset.dataset.mode}.csv")
+    torch.save(model.state_dict(), f"{model_name}_{train_loader.dataset.dataset.get_name()}_{train_loader.dataset.dataset.augmentor.__class__.__name__}_{train_loader.dataset.dataset.mode}.pth")
+
 
 def evaluate(model, model_name, test_loader, augmentor, mode, criterion, device):
     model.eval()
@@ -177,8 +178,13 @@ def evaluate(model, model_name, test_loader, augmentor, mode, criterion, device)
         "f1" : f1
     }])
     res = pd.concat([res, new_row], ignore_index=True)
-    res.to_csv(f"{model_name}_{test_loader.dataset.get_name()}_{augmentor.__class__.__name__}_{mode}_test.csv", index=False)
+    if isinstance(test_loader.dataset, Subset):
+        dataset_wrapper = test_loader.dataset.dataset
+    else:
+        dataset_wrapper = test_loader.dataset
 
+    res.to_csv(f"{model_name}_{dataset_wrapper.get_name()}_{dataset_wrapper.augmentor.__class__.__name__}_{mode}_test.csv", index=False)
+    
 for i in range(len(models)):
     for dataset in datasets:
         for augmentor in augmentors:
