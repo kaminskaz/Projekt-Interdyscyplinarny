@@ -56,14 +56,14 @@ def get_transform(is_grayscale=False):
     return transforms.Compose(transform_list)
 
 # Load training datasets with no special augumentation
-cifar10_train = CIFAR10(root="./data", train=True, transform=get_transform(), download=True)
+# cifar10_train = CIFAR10(root="./data", train=True, transform=get_transform(), download=True)
 fashion_mnist_train = FashionMNIST(root="./data", train=True, transform=get_transform(is_grayscale=True), download=True)
 
 # Load test datasets with no special augumentation
-cifar10_test = CIFAR10(root="./data", train=False, transform=get_transform(), download=True)
+# cifar10_test = CIFAR10(root="./data", train=False, transform=get_transform(), download=True)
 fashion_mnist_test = FashionMNIST(root="./data", train=False, transform=get_transform(is_grayscale=True), download=True)
 
-datasets = [(cifar10_train, cifar10_test), (fashion_mnist_train, fashion_mnist_test)]
+datasets = [(fashion_mnist_train, fashion_mnist_test)]
 
 augmentor = Augmentor()
 stes_augmentor = STESAugmentor()
@@ -71,7 +71,7 @@ stes_augmentor = STESAugmentor()
 augmentors = [augmentor, stes_augmentor, None]
 
 # Define class names for both datasets
-cifar10_classes = cifar10_train.classes
+# cifar10_classes = cifar10_train.classes
 fashion_mnist_classes = fashion_mnist_train.classes
 
 # Load EfficientNet models (both pretrained and not pretrained)
@@ -83,10 +83,10 @@ efficientnet_b0_non_pretrained = models.efficientnet_b0(weights=None)
 efficientnet_b7_pretrained = models.efficientnet_b7(weights=models.EfficientNet_B7_Weights.IMAGENET1K_V1)
 efficientnet_b7_non_pretrained = models.efficientnet_b7(weights=None)
 
-models = [efficientnet_b7_non_pretrained]
+models = [efficientnet_b0_non_pretrained]
 
 model_names = [
-    "EfficientNet-B7 Non-Pretrained"
+ "EfficientNet-B0 Non-Pretrained"
 ]
 
 modes = ["same", "different", "combine"]
