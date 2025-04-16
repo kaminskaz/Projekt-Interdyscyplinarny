@@ -16,4 +16,4 @@ export PYTHONFAULTHANDLER=1
 cd /mnt/evafs/groups/kazmierczak-group/Projekt-Interdyscyplinarny # zawsze wpierw kieruje do ścieżki z kodem
 
 source /mnt/evafs/groups/kazmierczak-group/Projekt-Interdyscyplinarny/.venv/bin/activate
-python train.py slurm_id=${SLURM_JOB_ID} "$@"
+python code/train.py slurm_id=${SLURM_JOB_ID} "$@"
