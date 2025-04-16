@@ -29,18 +29,12 @@ from sklearn.model_selection import train_test_split
 #get parameters
 import sys
 args = dict(arg.split('=') for arg in sys.argv[1:])
-if 'model' in args:
-    model_abb = args['model']
-else:
-    model = "b0"
-if 'dataset' in args:
-    dataset = args['dataset']
-else:
-    dataset = "cifar10"
+model_abb = args.get('model', 'b0')
+dataset = args.get('dataset', 'cifar10')
 
 if 'slurm_id' in args:
     slurm_id = args['slurm_id']
-dir = f'./{slurm_id}_{model}_{dataset}' if 'slurm_id' in args else '.'
+dir = f'./{slurm_id}_{model_abb}_{dataset}' if 'slurm_id' in args else '.'
 
 if not os.path.exists(dir):
     os.makedirs(dir)
