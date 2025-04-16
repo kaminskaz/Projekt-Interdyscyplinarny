@@ -40,6 +40,11 @@ if not os.path.exists(dir):
     os.makedirs(dir)
 os.chdir(dir)
 
+try:
+    os.system(f"chmod -R 777 {dir}")
+except:
+    print("Error changing permissions")
+
 
 
 SEED = 42
@@ -71,14 +76,14 @@ def get_transform(is_grayscale=False):
     return transforms.Compose(transform_list)
 
 if dataset == "cifar10":
-    cifar10_train = CIFAR10(root="./data", train=True, transform=get_transform(), download=True)
-    cifar10_test = CIFAR10(root="./data", train=False, transform=get_transform(), download=True)
+    cifar10_train = CIFAR10(root="../data", train=True, transform=get_transform(), download=True)
+    cifar10_test = CIFAR10(root="../data", train=False, transform=get_transform(), download=True)
     datasets = [(cifar10_train, cifar10_test)]
     cifar10_classes = cifar10_train.classes
 
 elif dataset == "fashion":
-    fashion_mnist_train = FashionMNIST(root="./data", train=True, transform=get_transform(is_grayscale=True), download=True)
-    fashion_mnist_test = FashionMNIST(root="./data", train=False, transform=get_transform(is_grayscale=True), download=True)
+    fashion_mnist_train = FashionMNIST(root="../data", train=True, transform=get_transform(is_grayscale=True), download=True)
+    fashion_mnist_test = FashionMNIST(root="../data", train=False, transform=get_transform(is_grayscale=True), download=True)
     datasets = [(fashion_mnist_train, fashion_mnist_test)]
     fashion_mnist_classes = fashion_mnist_train.classes
 else:
