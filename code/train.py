@@ -74,11 +74,13 @@ if dataset == "cifar10":
     cifar10_train = CIFAR10(root="./data", train=True, transform=get_transform(), download=True)
     cifar10_test = CIFAR10(root="./data", train=False, transform=get_transform(), download=True)
     datasets = [(cifar10_train, cifar10_test)]
+    cifar10_classes = cifar10_train.classes
 
 elif dataset == "fashion":
     fashion_mnist_train = FashionMNIST(root="./data", train=True, transform=get_transform(is_grayscale=True), download=True)
     fashion_mnist_test = FashionMNIST(root="./data", train=False, transform=get_transform(is_grayscale=True), download=True)
     datasets = [(fashion_mnist_train, fashion_mnist_test)]
+    fashion_mnist_classes = fashion_mnist_train.classes
 else:
     raise ValueError("Dataset not supported. Please choose 'cifar10' or 'fashion'.")
 
@@ -87,9 +89,6 @@ stes_augmentor = STESAugmentor()
 
 augmentors = [augmentor, stes_augmentor, None]
 
-# Define class names for both datasets
-cifar10_classes = cifar10_train.classes
-# fashion_mnist_classes = fashion_mnist_train.classes
 
 # Load EfficientNet models (both pretrained and not pretrained)
 # EfficientNet-B0
