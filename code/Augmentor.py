@@ -73,17 +73,17 @@ class Augmentor:
                 3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.08, 0.08), contrast_limit=(0.08, 0.08), p=self.p), 
                 4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=self.p) 
             },
-            4: {  # noises
-                1: lambda p: A.GaussNoise(std_range=(0.01,0.01), p=self.p),
-                2: lambda p: A.GaussNoise(std_range=(0.02,0.02), p=self.p),  
-                3: lambda p: A.GaussNoise(std_range=(0.03,0.03), p=self.p),  
-                4: lambda p: A.GaussNoise(std_range=(0.05,0.05), p=self.p) 
-            },
-            5: {  # color adjustments
-                1: lambda p: A.HueSaturationValue(hue_shift_limit=(-1, 1), sat_shift_limit=(-1, 1), val_shift_limit=(-1, 1), p=self.p),  
-                2: lambda p: A.HueSaturationValue(hue_shift_limit=(-2, 2), sat_shift_limit=(-2, 2), val_shift_limit=(-2, 2), p=self.p), 
-                3: lambda p: A.HueSaturationValue(hue_shift_limit=(-3, 3), sat_shift_limit=(-3, 3), val_shift_limit=(-3, 3), p=self.p), 
-            },
+            # 4: {  # noises
+            #     1: lambda p: A.GaussNoise(std_range=(0.01,0.01), p=self.p),
+            #     2: lambda p: A.GaussNoise(std_range=(0.02,0.02), p=self.p),  
+            #     3: lambda p: A.GaussNoise(std_range=(0.03,0.03), p=self.p),  
+            #     4: lambda p: A.GaussNoise(std_range=(0.05,0.05), p=self.p) 
+            # },
+            # 5: {  # color adjustments
+            #     1: lambda p: A.HueSaturationValue(hue_shift_limit=(-1, 1), sat_shift_limit=(-1, 1), val_shift_limit=(-1, 1), p=self.p),  
+            #     2: lambda p: A.HueSaturationValue(hue_shift_limit=(-2, 2), sat_shift_limit=(-2, 2), val_shift_limit=(-2, 2), p=self.p), 
+            #     3: lambda p: A.HueSaturationValue(hue_shift_limit=(-3, 3), sat_shift_limit=(-3, 3), val_shift_limit=(-3, 3), p=self.p), 
+            # },
         }
 
    
