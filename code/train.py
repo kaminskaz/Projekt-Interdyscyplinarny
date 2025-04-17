@@ -273,7 +273,7 @@ for i in range(len(models)):
                     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
                     res = pd.DataFrame(columns=["loss", "accuracy", "recall", "precision", "f1"])
                     res, dataset_wrapper = evaluate(model, model_name, dataloader_test, augmentor, mode, criterion, device, res)
-                    res.to_csv(f"{model_name}_{dataset_wrapper.get_name()}_{dataset_wrapper.augmentor.__class__.__name__}_{mode}_test.csv", index=False)
+                    res.to_csv(f"{model_name}_{dataset_wrapper.get_name()}_{augmentor.__class__.__name__}_{mode}_test.csv", index=False)
 
             else:
                 indices = list(range(len(dataset_wrapped)))
@@ -301,7 +301,7 @@ for i in range(len(models)):
                 dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
                 res = pd.DataFrame(columns=["loss", "accuracy", "recall", "precision", "f1"])
                 res, dataset_wrapper = evaluate(model, model_name, dataloader_test, augmentor, None, criterion, device, res)
-                res.to_csv(f"{model_name}_{dataset_wrapper.get_name()}_{dataset_wrapper.augmentor.__class__.__name__}_{mode}_test.csv", index=False)
+                res.to_csv(f"{model_name}_{dataset_wrapper.get_name()}_{augmentor.__class__.__name__}_test.csv", index=False)
                 
 
 
