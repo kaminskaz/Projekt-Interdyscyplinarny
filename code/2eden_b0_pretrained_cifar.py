@@ -93,7 +93,7 @@ modes = ["same", "different", "combine"]
 
 # Hyperparameters
 batch_size = 64
-epochs = 2  # You can adjust the number of epochs
+epochs = 4  # You can adjust the number of epochs
 learning_rate = 0.001
 optimizer = optim.Adam(efficientnet_b0_pretrained.parameters(), lr=learning_rate)
 criterion = nn.CrossEntropyLoss()
