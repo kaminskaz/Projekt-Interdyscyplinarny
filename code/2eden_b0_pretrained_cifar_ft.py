@@ -105,6 +105,9 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
         param.requires_grad = False
 
     model.classifier[1].requires_grad = True
+    learning_rate = 0.001
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
+    
     hist = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     res = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     for epoch in range(epochs):
@@ -112,41 +115,25 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
         running_loss = 0.0
         correct = 0
         total = 0
-        
-        for param in model.parameters():
-            param.requires_grad = False
 
-        # Odmrażasz tylko klasyfikator
-        for param in model.classifier.parameters():
-            param.requires_grad = True
-            
-        learning_rate = 0.001
-        optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
 
-        for epoch in range(epochs):
-            print(f"Epoch {epoch + 1}/{epochs}")
-            running_loss = 0.0
-            correct = 0
-            total = 0
+        # Po 7 epokach – odmrażasz cały model i tworzysz nowy optimizer
+        if epoch == 7:
+            for param in model.parameters():
+                param.requires_grad = True
+            learning_rate = 0.0001
+            optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-            # Po 7 epokach – odmrażasz cały model i tworzysz nowy optimizer
-            if epoch == 7:
-                for param in model.parameters():
-                    param.requires_grad = True
-                learning_rate = 0.0001
-                optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+        model.train()
 
-            model.train()
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
 
-            for inputs, labels in train_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-
-                optimizer.zero_grad()
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                loss.backward()
-                optimizer.step()
-
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
             
             running_loss += loss.item()
             
