@@ -25,7 +25,7 @@ import copy
 import pandas as pd
 import sklearn.metrics as metrics
 from sklearn.model_selection import train_test_split
-import Albumentations as A
+import albumentations as A
 
 #get parameters
 import sys
