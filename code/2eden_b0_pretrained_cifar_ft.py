@@ -104,7 +104,8 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
     for param in model.parameters():
         param.requires_grad = False
 
-    model.classifier[1].requires_grad = True
+    for param in model.classifier.parameters():
+        param.requires_grad = True
     learning_rate = 0.001
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
     
