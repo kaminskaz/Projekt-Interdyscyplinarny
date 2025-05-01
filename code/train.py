@@ -25,6 +25,7 @@ import copy
 import pandas as pd
 import sklearn.metrics as metrics
 from sklearn.model_selection import train_test_split
+import Albumentations as A
 
 #get parameters
 import sys
@@ -91,8 +92,9 @@ else:
 
 augmentor = Augmentor()
 stes_augmentor = STESAugmentor()
+rotate_augmentor = A.Rotate(limit=20, p=1.0)  
 
-augmentors = [augmentor, stes_augmentor, None]
+augmentors = [augmentor, stes_augmentor, None, rotate_augmentor]
 
 
 # Load EfficientNet models (both pretrained and not pretrained)
@@ -105,6 +107,7 @@ efficientnet_b7_pretrained = models.efficientnet_b7(weights=models.EfficientNet_
 efficientnet_b7_non_pretrained = models.efficientnet_b7(weights=None)
 
 models = []
+pretrained = False
 
 if model_abb == "b0":
     models.append(efficientnet_b0_non_pretrained)
@@ -112,8 +115,10 @@ elif model_abb == "b7":
     models.append(efficientnet_b7_non_pretrained)
 elif model_abb == "b0_p":
     models.append(efficientnet_b0_pretrained)
+    pretrained = True
 elif model_abb == "b7_p":
     models.append(efficientnet_b7_pretrained)
+    pretrained = True
 
 model_names = []
 
@@ -136,16 +141,33 @@ optimizer = optim.Adam(efficientnet_b0_pretrained.parameters(), lr=learning_rate
 criterion = nn.CrossEntropyLoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def train(model, model_name, train_loader, optimizer, criterion, device, epochs=5, mode=None):
+def train(model, model_name, train_loader, optimizer, criterion, device, pretrained, epochs=5, mode=None):
     model.train()
+    if pretrained:
+        for param in model.parameters():
+            param.requires_grad = False
+
+        for param in model.classifier.parameters():
+            param.requires_grad = True
+
+    learning_rate = 0.001
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
+
     hist = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     res = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
+
     for epoch in range(epochs):
         print(f"Epoch {epoch + 1}/{epochs}")
         running_loss = 0.0
         correct = 0
         total = 0
-        
+    
+        if pretrained and epoch == 10:
+            for param in model.parameters():
+                param.requires_grad = True
+            learning_rate = 0.0001
+            optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
@@ -267,7 +289,7 @@ for i in range(len(models)):
                     criterion = nn.CrossEntropyLoss()
                     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-                    train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs, mode=mode)
+                    train(model, model_name, dataloader_train, optimizer, criterion, device, pretrained, epochs = epochs, mode=mode)
 
                     # Evaluate on test set
                     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
@@ -295,7 +317,7 @@ for i in range(len(models)):
                 criterion = nn.CrossEntropyLoss()
                 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-                train(model, model_name, dataloader_train, optimizer, criterion, device, epochs = epochs, mode=None)
+                train(model, model_name, dataloader_train, optimizer, criterion, device, pretrained, epochs = epochs, mode=None)
 
                 # Evaluate on test set
                 dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)

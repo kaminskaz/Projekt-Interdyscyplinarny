@@ -117,15 +117,12 @@ def train(model, model_name, train_loader, optimizer, criterion, device, epochs=
         correct = 0
         total = 0
 
-
-        # Po 7 epokach – odmrażasz cały model i tworzysz nowy optimizer
+        # Unfreeze the model after 7 epochs if pretrained
         if epoch == 7:
             for param in model.parameters():
                 param.requires_grad = True
             learning_rate = 0.0001
             optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-
-        model.train()
 
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
