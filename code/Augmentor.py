@@ -56,10 +56,10 @@ class Augmentor:
         # }
         self.aug_dictionary = {
             1: {  # rotations
-                1: lambda p: A.Rotate(limit=(-2,2), p=self.p), 
-                2: lambda p: A.Rotate(limit=(-4,4), p=self.p), 
-                3: lambda p: A.Rotate(limit=(-6,6), p=self.p),  
-                4: lambda p: A.Rotate(limit=(-8,8), p=self.p)  
+                1: lambda p: A.Rotate(limit=(-5,5), p=self.p), 
+                2: lambda p: A.Rotate(limit=(-10,10), p=self.p), 
+                3: lambda p: A.Rotate(limit=(-12,12), p=self.p),  
+                4: lambda p: A.Rotate(limit=(-15,15), p=self.p)  
             },
             2: {  # blurs
                 1: lambda p: A.GaussianBlur(blur_limit=(5, 5), p=self.p), 
@@ -174,15 +174,16 @@ class Augmentor:
                 yield x1, y1, x2, y2, segment
 
                 
-    def augment_image(self, image, mode, x_splits_number=9, y_splits_number=9, min_space_between_splits=10, aug=None):
+    def augment_image(self, image, mode, x_splits_number=0, y_splits_number=0, min_space_between_splits=10, aug=None):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         if image.shape[-1] == 4:
             print("Alpha channel detected, converting from BGRA to BGR")
             image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)  
         augmented_image = np.copy(image)
 
-        # x_splits_number = random.randint(1, x_splits_number)
-        # y_splits_number = random.randint(1, y_splits_number)
+        # in case we want to choose a random number of splits for further testing
+        #x_splits_number = random.randint(0, x_splits_number)
+        #y_splits_number = random.randint(0, y_splits_number)
 
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
 
@@ -240,6 +241,8 @@ class Augmentor:
                     aug_power = random.randint(1, len(self.aug_dictionary[5]))
                     augmented_segment = self.aug_dictionary[5][aug_power](p=self.p)(image=segment)['image']
                     augmented_image[y1:y2, x1:x2] = augmented_segment
+            elif aug == 'baseline':
+                pass
         return augmented_image
 
     

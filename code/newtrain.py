@@ -17,6 +17,7 @@ import cv2
 from PIL import Image
 
 from Augmentor import Augmentor
+from STESAugmentor import STESAugmentor
 from dataset_wrapper import DatasetWrapper
 
 import random
@@ -90,7 +91,10 @@ elif dataset == "fashion":
 else:
     raise ValueError("Dataset not supported. Please choose 'cifar10' or 'fashion'.")
 
-augmentor = Augmentor()
+if aug == "stes":
+    augmentor = STESAugmentor()
+else:
+    augmentor = Augmentor()
 
 
 # Load EfficientNet models (both pretrained and not pretrained)
@@ -104,7 +108,8 @@ learning_rate = 0.001
 criterion = nn.CrossEntropyLoss()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mode=None, learning_rate = 0.001):
+
+def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mode=None, learning_rate=0.001):
     model.train()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=learning_rate)
 
@@ -118,29 +123,32 @@ def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mod
         correct = 0
         total = 0
 
+        all_preds = []
+        all_labels = []
+
         for inputs, labels in train_loader:
             inputs, labels = inputs.to(device), labels.to(device)
 
-            # Zero the gradients
             optimizer.zero_grad()
-
-            # Forward pass
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            
-            # Backward pass and optimization
             loss.backward()
             optimizer.step()
-            
+
             running_loss += loss.item()
-            
+
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
-        recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
-        precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
-        f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
+            all_preds.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+        # Compute metrics for entire epoch
+        recall = metrics.recall_score(all_labels, all_preds, average='macro', zero_division=0)
+        precision = metrics.precision_score(all_labels, all_preds, average='macro', zero_division=0)
+        f1 = metrics.f1_score(all_labels, all_preds, average='macro', zero_division=0)
+
         new_row = pd.DataFrame([{
             "epoch": epoch + 1,
             "loss": running_loss / len(train_loader),
@@ -151,14 +159,14 @@ def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mod
         }])
         hist = pd.concat([hist, new_row], ignore_index=True)
 
-        # evaluate on validation set
+        # Evaluate on validation set
         res, dataset_wrapper = evaluate(model, dataloader_val, criterion, device, res, epoch)
 
-    res.to_csv(f"{aug}_{xy}_{seed}_val.csv", index=False)    
-
     hist.to_csv(f"{aug}_{xy}_{seed}.csv", index=False)
-    print(f"saved {aug}_{xy}_{seed}.csv")
+    res.to_csv(f"{aug}_{xy}_{seed}_val.csv", index=False)
+    print(f"Saved metrics: {aug}_{xy}_{seed}.csv")
     torch.save(model.state_dict(), f"{aug}_{xy}_{seed}.pth")
+
 
 
 def evaluate(model, test_loader, criterion, device, res, epoch=None):
@@ -166,48 +174,58 @@ def evaluate(model, test_loader, criterion, device, res, epoch=None):
     running_loss = 0.0
     correct = 0
     total = 0
-    
+
+    all_preds = []
+    all_labels = []
+
     with torch.no_grad():
         for inputs, labels in test_loader:
             inputs, labels = inputs.to(device), labels.to(device)
-            
+
             outputs = model(inputs)
             loss = criterion(outputs, labels)
-            
+
             running_loss += loss.item()
-            
+
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
-    # Calculate metrics
-    recall = metrics.recall_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
-    precision = metrics.precision_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
-    f1 = metrics.f1_score(labels.cpu(), predicted.cpu(), average='macro', zero_division=0)
+
+            all_preds.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
+
+    # Compute metrics across the entire test set
+    recall = metrics.recall_score(all_labels, all_preds, average='macro', zero_division=0)
+    precision = metrics.precision_score(all_labels, all_preds, average='macro', zero_division=0)
+    f1 = metrics.f1_score(all_labels, all_preds, average='macro', zero_division=0)
+
     if epoch is not None:
-      new_row = pd.DataFrame([{
-        "epoch": epoch + 1,
-        "loss": running_loss/len(test_loader),
-        "accuracy": 100 * correct/total,
-        "recall" : recall,
-        "precision" : precision,
-        "f1" : f1
-      }])
+        new_row = pd.DataFrame([{
+            "epoch": epoch + 1,
+            "loss": running_loss / len(test_loader),
+            "accuracy": 100 * correct / total,
+            "recall": recall,
+            "precision": precision,
+            "f1": f1
+        }])
     else:
-      new_row = pd.DataFrame([{
-        "loss": running_loss/len(test_loader),
-        "accuracy": 100 * correct/total,
-        "recall" : recall,
-        "precision" : precision,
-        "f1" : f1
-      }])
+        new_row = pd.DataFrame([{
+            "loss": running_loss / len(test_loader),
+            "accuracy": 100 * correct / total,
+            "recall": recall,
+            "precision": precision,
+            "f1": f1
+        }])
 
     res = pd.concat([res, new_row], ignore_index=True)
+
     if isinstance(test_loader.dataset, Subset):
         dataset_wrapper = test_loader.dataset.dataset
     else:
         dataset_wrapper = test_loader.dataset
 
     return res, dataset_wrapper
+
 
     
     
@@ -219,9 +237,6 @@ labels = [dataset_wrapped[idx][1] for idx in indices]
 train_idx, val_idx = train_test_split(indices, test_size=0.2, random_state=1, stratify=labels)
 train_subset = Subset(dataset_wrapped, train_idx)
 val_subset = Subset(dataset_wrapped, val_idx)
-
-
-
 
 
 for seed in range(1, 7):
