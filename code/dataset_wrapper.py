@@ -1,3 +1,4 @@
+import random
 import torch
 from torch.utils.data import Dataset
 import numpy as np
@@ -8,7 +9,7 @@ import albumentations as A
 
 
 class DatasetWrapper(Dataset):
-    def __init__(self, dataset, augmentor=None, mode=None, p = 0.5, x_splits_number=0, y_splits_number=0, aug = None):
+    def __init__(self, dataset, augmentor=None, mode=None, p = 0.5, x_splits_number=0, y_splits_number=0, aug = None, seed=42):
         """
         Args:
             dataset (Dataset): A PyTorch dataset object.
@@ -22,6 +23,20 @@ class DatasetWrapper(Dataset):
         self.x_splits_number = x_splits_number
         self.y_splits_number = y_splits_number
         self.aug = aug
+        
+        #set all seeds
+        self.seed = seed
+        torch.manual_seed(self.seed)
+        np.random.seed(self.seed)
+        #set augmentor seed
+        if isinstance(self.augmentor, Augmentor):
+            self.augmentor.seed = self.seed
+        elif isinstance(self.augmentor, STESAugmentor):
+            self.augmentor.seed = self.seed
+        else:
+            raise ValueError("Invalid augmentor type. Use Augmentor or STESAugmentor.")
+        random.seed(self.seed)
+
 
     def __len__(self):
         return len(self.dataset)
