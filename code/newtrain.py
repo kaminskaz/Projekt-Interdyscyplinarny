@@ -241,8 +241,8 @@ val_subset = Subset(dataset_wrapped, val_idx)
 
 for seed in range(1, 7):
     seed_everything(seed)
-    dataloader_train = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
-    dataloader_val = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
+    dataloader_train = DataLoader(train_subset, batch_size=batch_size,num_workers = 8, shuffle=True, pin_memory=True)
+    dataloader_val = DataLoader(val_subset, batch_size=batch_size,num_workers = 8, shuffle=False, pin_memory=True)
     
     model = copy.deepcopy(mobilenet)
     in_features = model.classifier[1].in_features
