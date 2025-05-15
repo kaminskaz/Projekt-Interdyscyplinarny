@@ -181,8 +181,8 @@ class Augmentor:
             image = cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)  
         augmented_image = np.copy(image)
 
-        x_splits_number = random.randint(1, x_splits_number)
-        y_splits_number = random.randint(1, y_splits_number)
+        # x_splits_number = random.randint(1, x_splits_number)
+        # y_splits_number = random.randint(1, y_splits_number)
 
         x_splits, y_splits = self.split_image(image.shape[1], image.shape[0], x_splits_number, y_splits_number, min_space_between_splits)
 
