@@ -8,7 +8,7 @@ import albumentations as A
 
 
 class DatasetWrapper(Dataset):
-    def __init__(self, dataset, augmentor=None, mode=None, p = 0.5):
+    def __init__(self, dataset, augmentor=None, mode=None, p = 0.5, x_splits_number=0, y_splits_number=0, aug = None):
         """
         Args:
             dataset (Dataset): A PyTorch dataset object.
@@ -19,6 +19,9 @@ class DatasetWrapper(Dataset):
         self.augmentor = augmentor
         self.mode = mode
         self.p = p
+        self.x_splits_number = x_splits_number
+        self.y_splits_number = y_splits_number
+        self.aug = aug
 
     def __len__(self):
         return len(self.dataset)
@@ -44,7 +47,7 @@ class DatasetWrapper(Dataset):
                     print("WARNING! Invalid mode. Choose 'same', 'different', or 'combine'. Changing to default 'different'.")
                     self.mode = 'different'
                     self.augmentor.mode = self.mode
-                image_aug = self.augmentor.augment_image(image_np, mode=self.mode)
+                image_aug = self.augmentor.augment_image(image_np, mode=self.mode, x_splits_number=self.x_splits_number, y_splits_number=self.y_splits_number, aug = self.aug)
                 #permute back to (C, H, W) if needed
                 image_aug = np.transpose(image_aug, (2, 0, 1))
                 image = image_aug

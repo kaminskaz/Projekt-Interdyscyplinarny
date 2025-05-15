@@ -73,12 +73,17 @@ class Augmentor:
                 3: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.08, 0.08), contrast_limit=(0.08, 0.08), p=self.p), 
                 4: lambda p: A.RandomBrightnessContrast(brightness_limit=(0.1, 0.1), contrast_limit=(0.1, 0.1), p=self.p) 
             },
-            # 4: {  # noises
-            #     1: lambda p: A.GaussNoise(std_range=(0.01,0.01), p=self.p),
-            #     2: lambda p: A.GaussNoise(std_range=(0.02,0.02), p=self.p),  
-            #     3: lambda p: A.GaussNoise(std_range=(0.03,0.03), p=self.p),  
-            #     4: lambda p: A.GaussNoise(std_range=(0.05,0.05), p=self.p) 
-            # },
+            4: {  # noises
+                1: lambda p: A.GaussNoise(std_range=(0.01,0.01), p=self.p),
+                2: lambda p: A.GaussNoise(std_range=(0.02,0.02), p=self.p),  
+                3: lambda p: A.GaussNoise(std_range=(0.03,0.03), p=self.p),  
+                4: lambda p: A.GaussNoise(std_range=(0.05,0.05), p=self.p) 
+            },
+            5: { #flips and mirrors
+                1: lambda p: A.HorizontalFlip(p=self.p), 
+                2: lambda p: A.VerticalFlip(p=self.p),  
+                3: lambda p: A.Compose([A.HorizontalFlip(p=self.p), A.VerticalFlip(p=self.p)])
+            },
             # 5: {  # color adjustments
             #     1: lambda p: A.HueSaturationValue(hue_shift_limit=(-1, 1), sat_shift_limit=(-1, 1), val_shift_limit=(-1, 1), p=self.p),  
             #     2: lambda p: A.HueSaturationValue(hue_shift_limit=(-2, 2), sat_shift_limit=(-2, 2), val_shift_limit=(-2, 2), p=self.p), 
@@ -169,7 +174,7 @@ class Augmentor:
                 yield x1, y1, x2, y2, segment
 
                 
-    def augment_image(self, image, mode, x_splits_number=9, y_splits_number=9, min_space_between_splits=10):
+    def augment_image(self, image, mode, x_splits_number=9, y_splits_number=9, min_space_between_splits=10, aug=None):
         """Applies augmentation (vertical flip) to each segment and reconstructs the image."""
         if image.shape[-1] == 4:
             print("Alpha channel detected, converting from BGRA to BGR")
@@ -184,31 +189,57 @@ class Augmentor:
         if mode not in ['same', 'different', 'combine']:
             raise ValueError("Invalid mode. Choose 'same', 'different', or 'combine'.")
         
-        if mode == 'same':
-            aug_type = random.randint(1, len(self.aug_dictionary))
-            for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
-                aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
-                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=self.p)(image=segment)['image']
-                augmented_image[y1:y2, x1:x2] = augmented_segment
-
-        if mode == 'different':
-            for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+        if aug is None:
+            if mode == 'same':
                 aug_type = random.randint(1, len(self.aug_dictionary))
-                aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
-                augmented_segment = self.aug_dictionary[aug_type][aug_power](p=self.p)(image=segment)['image']
-                augmented_image[y1:y2, x1:x2] = augmented_segment
-
-        if mode == 'combine':
-            for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
-                r = random.randint(1, 3)
-                chosen_augmentations = random.sample(list(self.aug_dictionary.keys()), r)
-                augmented_segment = segment.copy() 
-                for aug_type in chosen_augmentations:
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
                     aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
-                    augment = self.aug_dictionary[aug_type][aug_power]
-                    augmented_segment = augment(p=self.p)(image=augmented_segment)['image']
-                augmented_image[y1:y2, x1:x2] = augmented_segment
+                    augmented_segment = self.aug_dictionary[aug_type][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
 
+            if mode == 'different':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_type = random.randint(1, len(self.aug_dictionary))
+                    aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
+                    augmented_segment = self.aug_dictionary[aug_type][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+
+            if mode == 'combine':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    r = random.randint(1, 3)
+                    chosen_augmentations = random.sample(list(self.aug_dictionary.keys()), r)
+                    augmented_segment = segment.copy() 
+                    for aug_type in chosen_augmentations:
+                        aug_power = random.randint(1, len(self.aug_dictionary[aug_type]))
+                        augment = self.aug_dictionary[aug_type][aug_power]
+                        augmented_segment = augment(p=self.p)(image=augmented_segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+        else:
+            if aug == 'rotate':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_power = random.randint(1, len(self.aug_dictionary[1]))
+                    augmented_segment = self.aug_dictionary[1][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+            elif aug == 'blur':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_power = random.randint(1, len(self.aug_dictionary[2]))
+                    augmented_segment = self.aug_dictionary[2][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+            elif aug == 'brightness':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_power = random.randint(1, len(self.aug_dictionary[3]))
+                    augmented_segment = self.aug_dictionary[3][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+            elif aug == 'noise':    
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_power = random.randint(1, len(self.aug_dictionary[4]))
+                    augmented_segment = self.aug_dictionary[4][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+            elif aug == 'flip':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_power = random.randint(1, len(self.aug_dictionary[5]))
+                    augmented_segment = self.aug_dictionary[5][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
         return augmented_image
 
     
