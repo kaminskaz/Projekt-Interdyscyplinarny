@@ -29,12 +29,13 @@ class DatasetWrapper(Dataset):
         torch.manual_seed(self.seed)
         np.random.seed(self.seed)
         #set augmentor seed
-        if isinstance(self.augmentor, Augmentor):
-            self.augmentor.seed = self.seed
-        elif isinstance(self.augmentor, STESAugmentor):
-            self.augmentor.seed = self.seed
-        else:
-            raise ValueError("Invalid augmentor type. Use Augmentor or STESAugmentor.")
+        if self.augmentor is not None:
+            if isinstance(self.augmentor, Augmentor):
+                self.augmentor.seed = self.seed
+            elif isinstance(self.augmentor, STESAugmentor):
+                self.augmentor.seed = self.seed
+            else:
+                raise ValueError("Invalid augmentor type. Use Augmentor or STESAugmentor.")
         random.seed(self.seed)
 
 
