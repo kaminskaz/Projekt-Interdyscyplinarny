@@ -43,7 +43,6 @@ class STESAugmentor:
 
     
     def apply_color_space_transform(self, segment):
-        # use A.HueSaturationValue(hue_shift_limit=(10,10), sat_shift_limit=(10, 10), val_shift_limit=(10, 10), p=p)
         transform = A.Compose([
             A.HueSaturationValue(hue_shift_limit=(10, 350), sat_shift_limit=(0,0), val_shift_limit=(0,0), p=1.0)
         ])

@@ -8,7 +8,7 @@ import os
 
 
 class Augmentor:
-    def __init__(self, p=0.5, seed=123):
+    def __init__(self, p=0.8, seed=123):
         self.seed = seed
         np.random.seed(seed)
         random.seed(seed)
