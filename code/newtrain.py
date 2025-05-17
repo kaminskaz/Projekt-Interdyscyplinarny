@@ -125,6 +125,9 @@ def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mod
     hist = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
     res = pd.DataFrame(columns=["epoch", "loss", "accuracy", "recall", "precision", "f1"])
 
+    best_model_wts = copy.deepcopy(model.state_dict())
+    best_val_accuracy = 0.0
+
     for epoch in range(epochs):
         model.train()
         print(f"Epoch {epoch + 1}/{epochs}")
@@ -153,28 +156,40 @@ def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mod
             all_preds.extend(predicted.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
-        # Compute metrics for entire epoch
+        # Compute training metrics
         recall = metrics.recall_score(all_labels, all_preds, average='macro', zero_division=0)
         precision = metrics.precision_score(all_labels, all_preds, average='macro', zero_division=0)
         f1 = metrics.f1_score(all_labels, all_preds, average='macro', zero_division=0)
+        train_accuracy = 100 * correct / total
 
-        new_row = pd.DataFrame([{
+        hist = pd.concat([hist, pd.DataFrame([{
             "epoch": epoch + 1,
             "loss": running_loss / len(train_loader),
-            "accuracy": 100 * correct / total,
+            "accuracy": train_accuracy,
             "recall": recall,
             "precision": precision,
             "f1": f1
-        }])
-        hist = pd.concat([hist, new_row], ignore_index=True)
+        }])], ignore_index=True)
 
         # Evaluate on validation set
         res, dataset_wrapper = evaluate(model, dataloader_val, criterion, device, res, epoch)
+        val_accuracy = res.iloc[-1]["accuracy"]
 
+        # Save best model
+        if val_accuracy > best_val_accuracy:
+            best_val_accuracy = val_accuracy
+            best_model_wts = copy.deepcopy(model.state_dict())
+            print(f"New best validation accuracy: {val_accuracy:.2f}%")
+
+    # Save best model
+    model.load_state_dict(best_model_wts)
+    torch.save(model.state_dict(), f"{aug}_{xy}_{seed}.pth")
+    print(f"Saved best model for seed {seed} with accuracy {best_val_accuracy:.2f}%")
+
+    # Save metrics
     hist.to_csv(f"{aug}_{xy}_{seed}.csv", index=False)
     res.to_csv(f"{aug}_{xy}_{seed}_val.csv", index=False)
-    print(f"Saved metrics: {aug}_{xy}_{seed}.csv")
-    torch.save(model.state_dict(), f"{aug}_{xy}_{seed}.pth")
+    print(f"Saved metrics: {aug}_{xy}_{seed}.csv and {aug}_{xy}_{seed}_val.csv")
 
 
 

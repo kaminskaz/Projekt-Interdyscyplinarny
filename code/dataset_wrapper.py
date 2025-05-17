@@ -97,7 +97,12 @@ class DatasetWrapper(Dataset):
                 print_image_stats(f"[{idx}] After permute back to (C, H, W)", image_aug)
                 image = image_aug
 
-        image = torch.tensor(image / 255.0, dtype=torch.float32)
+        if isinstance(image, np.ndarray):
+            image = torch.tensor(image / 255.0, dtype=torch.float32)
+        elif isinstance(image, torch.Tensor):
+            image = image.float()  # already normalized by ToTensor()
+        else:
+            raise TypeError("Unsupported image type")
         return image, label
 
 
