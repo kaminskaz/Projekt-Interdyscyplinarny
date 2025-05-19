@@ -6,6 +6,24 @@ import albumentations as A
 import matplotlib.pyplot as plt
 import os
 
+def rotate_segment(image, limit=15):
+    transform = A.Compose([
+        A.Rotate(limit=(-limit,limit), p=1.0) 
+    ])
+    augmented = transform(image=image)
+    rotated = augmented['image']
+    return rotated
+
+
+def apply_color_space_transform(image):
+    transform = A.Compose([
+        A.HueSaturationValue(hue_shift_limit=(10, 350), sat_shift_limit=(0,0), val_shift_limit=(0,0), p=1.0)
+    ])
+    augmented = transform(image=image)
+    transformed_segment = augmented['image']
+    return transformed_segment
+
+
 
 class Augmentor:
     def __init__(self, p=0.8, seed=123):
@@ -243,6 +261,27 @@ class Augmentor:
                     augmented_image[y1:y2, x1:x2] = augmented_segment
             elif aug == 'baseline':
                 pass
+            elif aug == 'combine':
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    r = random.random()
+                    if r <= self.p:
+                        colored_segment = apply_color_space_transform(segment)
+                        augmented_segment = rotate_segment(image=colored_segment)
+                        augmented_image[y1:y2, x1:x2] = augmented_segment
+            elif aug in ['flip-rotate', 'flip-brightness', 'rotate-brightness','flip-rotate-brightness']:
+                if aug == 'flip-rotate':
+                    idxs = [5,1]
+                elif aug == 'flip-brightness':
+                    idxs = [5,3]
+                elif aug == 'rotate-brightness':
+                    idxs = [1,3]
+                elif aug == 'flip-rotate-brightness':
+                    idxs = [5,1,3]
+                for x1, y1, x2, y2, segment in self.iterate_over_image(image, x_splits, y_splits):
+                    aug_power = random.randint(1, len(self.aug_dictionary[5]))
+                    augmented_segment = self.aug_dictionary[idxs[random.randint(0,len(idxs)-1)]][aug_power](p=self.p)(image=segment)['image']
+                    augmented_image[y1:y2, x1:x2] = augmented_segment
+                    
         return augmented_image
 
     
@@ -279,4 +318,5 @@ class Augmentor:
         plt.axis('off')  
 
         plt.show()
+
 
