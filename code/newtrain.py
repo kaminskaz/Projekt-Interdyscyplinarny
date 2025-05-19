@@ -191,6 +191,8 @@ def train(model, seed, train_loader, optimizer, criterion, device, epochs=5, mod
     res.to_csv(f"{aug}_{xy}_{seed}_val.csv", index=False)
     print(f"Saved metrics: {aug}_{xy}_{seed}.csv and {aug}_{xy}_{seed}_val.csv")
 
+    return model
+
 
 
 def evaluate(model, test_loader, criterion, device, res, epoch=None):
@@ -335,7 +337,7 @@ for i in range(1,7):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    train(model, seed, dataloader_train, optimizer, criterion, device, epochs = epochs, mode=mode)
+    model = train(model, seed, dataloader_train, optimizer, criterion, device, epochs = epochs, mode=mode)
 
     # Evaluate on test set
     dataloader_test = DataLoader(DatasetWrapper(dataset[1]), batch_size=batch_size, shuffle=False)
