@@ -103,7 +103,7 @@ else:
 if aug == "stes":
     augmentor = STESAugmentor()
 else:
-    augmentor = Augmentor()
+    augmentor = Augmentor(p=.25)
 
 
 # Load EfficientNet models (both pretrained and not pretrained)
