@@ -6,7 +6,7 @@
 #SBATCH --gpus=1 # Jak nie potrzebujesz GPU to wyrzucasz tą linijke
 #SBATCH --cpus-per-gpu=8 # Ile cpu na jedno gpu ma być w tym konfigu to po prostu ile cpu chcesz mieć mówiłem żeby dawać zawsze minimum 6-8 bo inaczej kolejkowanie się psuje
 #SBATCH --mem=64gb # Ile ram chcesz mieć mamy dużo więc nie musisz dawać mało ale bez przesady
-#SBATCH --partition=short # Tutaj podajesz short,long,experimental jedną z tych partycji z której chcesz korzystać shot i long ma A100 short max 1d long dłużej a experimental gorsze GPU  
+#SBATCH --partition=experimental # Tutaj podajesz short,long,experimental jedną z tych partycji z której chcesz korzystać shot i long ma A100 short max 1d long dłużej a experimental gorsze GPU  
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=01180696@pw.edu.pl
 
