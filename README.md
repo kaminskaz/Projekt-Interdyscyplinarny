@@ -1,3 +1,5 @@
+# NIEAKTUALNE README
+
 # Stopień augmentacji zależny od fazy nauki
 ## Inspiracja podejściem Curriculum Learning
 
