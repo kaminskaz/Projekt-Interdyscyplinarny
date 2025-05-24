@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+from collections import defaultdict
 
 def plot_metrics_per_augmentation(out_folder='out_20052025'):
     base_path = os.path.abspath(os.path.join(os.getcwd(), '..', '..', out_folder))
@@ -278,3 +279,39 @@ def build_summary_dataframe(out_folder='out_20052025'):
 
     df_summary = pd.DataFrame(rows)
     return df_summary
+
+
+def format_value(mean, std, decimals=3):
+    return f"{mean:.{decimals}f} ± {std:.{decimals}f}"
+
+def generate_latex_table(df: pd.DataFrame) -> str:
+    grouped = defaultdict(list)
+    
+    # Grupowanie według trybu (np. blur, baseline, flip, itd.)
+    for _, row in df.iterrows():
+        mode = row["Tryb"]
+        split = f"{int(row['liczba podziałów x'])}x{int(row['liczba podziałów y'])}"
+        values = [
+            split,
+            format_value(row["loss_mean"], row["loss_std"]),
+            format_value(row["accuracy_mean"], row["accuracy_std"]),
+            format_value(row["recall_mean"], row["recall_std"]),
+            format_value(row["precision_mean"], row["precision_std"]),
+            format_value(row["f1_mean"], row["f1_std"]),
+        ]
+        grouped[mode].append(values)
+
+    latex = []
+    for mode, rows in grouped.items():
+        latex.append(f"% === {mode} ===")
+        if len(rows) == 1:
+            # Tylko jeden wiersz – nie trzeba multirow
+            line = rows[0]
+            latex.append(f"\\multirow{{1}}{{*}}{{{mode}}} & " + " & ".join(line) + " \\\\")
+        else:
+            latex.append(f"\\multirow{{{len(rows)}}}{{*}}{{{mode}}} & " + " & ".join(rows[0]) + " \\\\")
+            for row in rows[1:]:
+                latex.append("  & " + " & ".join(row) + " \\\\")
+        latex.append("\\hline\n")
+
+    return "\n".join(latex)
