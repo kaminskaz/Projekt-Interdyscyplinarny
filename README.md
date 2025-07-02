@@ -1,71 +1,40 @@
-# NIEAKTUALNE README
+# Curriculum-based Local Image Augmentation
 
-# Stopień augmentacji zależny od fazy nauki
-## Inspiracja podejściem Curriculum Learning
+Projekt Interdyscyplinarny — Politechnika Warszawska, Wydział MiNI  
+Zespół: [Kamińska](https://github.com/kaminskaz), [Dunal](https://github.com/xxkaro), [Choszczyk](https://github.com/nataliachoszczyk), [Deptuch](https://github.com/DeptuchMateusz)
 
-### Zespół
-- [Zofia Kamińska](https://github.com/kaminskaz)
-- [Karolina Dunal](https://github.com/xxkaro)
-- [Natalia Choszczyk](https://github.com/nataliachoszczyk)
-- [Mateusz Deptuch](https://github.com/DeptuchMateusz)
+## Opis
 
-### Cel projektu
-Celem jest zbadanie wpływu dynamicznego stopniowania augmentacji na proces uczenia modeli głębokich, szczególnie w kontekście klasyfikacji obrazów i problemów z niezrównoważonymi danymi.
+Celem projektu było zaprojektowanie i implementacja augmentora obrazów, który umożliwia stosowanie lokalnych transformacji na nieregularnych fragmentach obrazu. Augmentor działa w oparciu o siatkę podziału i definiowalne tryby modyfikacji.
 
-### Pytanie badawcze
-Jak dynamiczne dostosowanie intensywności augmentacji w zależności od fazy nauki wpływa na jakość i efektywność uczenia modeli głębokich?
+## Schemat działania augmentora
 
-## Harmonogram realizacji (10 tygodni)
+1. **Segmentacja obrazu** – siatka `n × n` dzieląca obraz na fragmenty.
+2. **Losowy wybór segmentów** – wybierane są podobszary do modyfikacji.
+3. **Lokalne augmentacje** – dla wybranych segmentów stosowane są transformacje (np. obrót, jasność, kontrast).
+4. **Parametr p** – kontroluje intensywność lub prawdopodobieństwo transformacji (możliwa zmiana w czasie nauki).
 
-### Etap 0: Zarys projektu i harmonogram (Tydzień 0 do 7.03.2025)
-**Cel:**
-- Dobór zespołu
-- Ustalenie zakresu projektu
-- Tworzenie harmonogramu
+<p align="center">
+  <img src="/images_for_documentation/fig1/diagram.png" alt="Schemat działania augmentora" width="600"/>
+</p>
 
-### Etap 1: Research i projektowanie (Tydzień 1-2 do 17.03.2025)
-**Cel:**
-- Przegląd literatury i opracowanie strategii augmentacji
-- Analiza artykułów dotyczących curriculum learning i augmentacji
-- Przegląd istniejących technik augmentacji
-- Przegląd benchmarków i zbiorów danych do eksperymentów
-- Wybór metryk ewaluacji i określenie struktury eksperymentu
+## Struktura projektu
 
-**Efekt:**
-- Dokument opisujący strategię augmentacji zależną od fazy nauki
-- Wybór datasetu i modelu
+- `code/`
+  - `Augmentor.py`, `STESAugmentor.py` – klasy implementujące lokalne augmentacje
+  - `wrapper.py` – moduł nakładający augmentację na dane
+  - `newtrain.py`, `visualizations.py` – pipeline treningowy i ewaluacyjny
+  - `*.sl` – skrypty SLURM do uruchamiania eksperymentów na EDENie
+  - `test_notebooks/` – wizualizacje i testy działania augmentorów na pojedynczych obrazach
+- pozostałe pliki to wygenerowane outputy oraz pliki potrzebne do dokumentacji
 
-### Etap 2: Implementacja strategii augmentacji (Tydzień 3-5 do 7.04.2025)
-**Cel:**
-- Zaimplementowanie dynamicznej augmentacji
-- Implementacja augmentacji statycznej (bazowej)
-- Implementacja augmentacji dynamicznej (np. rosnąca siła transformacji w kolejnych epokach)
-- Dostosowanie augmentacji do klasy trudności (np. większa dla łatwych przykładów)
+## Eksperymenty
 
-**Efekt:**
-Zaimplementowane i gotowe do testów podejścia:
-- Model bez augmentacji (baseline)
-- Model ze stałą augmentacją
-- Model z curriculum augmentacją
+Eksperymenty porównawcze przeprowadzono na kilku wariantach augmentacji. Szczegóły, wyniki i analizy dostępne są w dokumentacji projektu:
 
-### Etap 3: Eksperymenty (Tydzień 6-8 do 28.04.2025)
-**Cel:**
-- Przetestowanie różnych podejść i zebranie wyników
-- Uruchomienie eksperymentów na modelu bez augmentacji
-- Uruchomienie eksperymentów na modelu ze stałą augmentacją
-- Uruchomienie eksperymentów na modelu z dynamiczną augmentacją
-- Analiza wyników
+**[Dokumentacja (PDF)](/Projekt_Interdyscyplinarny_raport.pdf)**
 
-**Efekt:**
-- Wyniki w formie tabel i wykresów
+## Wymagania
 
-### Etap 4: Analiza i wnioski (Tydzień 9-10 do 12.05.2025)
-**Cel:**
-- Wyciągnięcie wniosków i przygotowanie podsumowania projektu
-- Analiza wpływu dynamicznej augmentacji na szybkość nauki
-- Analiza wpływu na overfitting i generalizację
-- Porównanie wyników w problemach z niezrównoważonymi danymi
-- Wnioski i potencjalne ulepszenia dla przyszłych badań
-
-**Efekt:**
-- Podsumowanie, raport i prezentacja końcowa
+```bash
+pip install -r requirements.txt
